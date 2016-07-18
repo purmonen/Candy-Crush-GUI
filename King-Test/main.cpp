@@ -113,14 +113,15 @@ struct GameEngine {
             auto timeLeftLabelRect = SDL_Rect{80,430,timeLeftLabel->w,timeLeftLabel->h};
             SDL_Texture* timeLeftTexture = SDL_CreateTextureFromSurface( renderer, timeLeftLabel );
             SDL_RenderCopy(renderer, timeLeftTexture, NULL, &timeLeftLabelRect);
-            
-            
             SDL_DestroyTexture(timeLeftTexture);
             
+            // Render rectangle around selected cell
                 auto selectedCell = cellPositionFromCoordinates(lastX, lastY);
+            if (game.getGameBoard().isCellValid(selectedCell)) {
                 auto selectedCellRect = rectForCellPosition(selectedCell, cellImages[CandyCrush::Blue]);
                 SDL_SetRenderDrawColor(renderer, 255, 80, 80, 1);
                 SDL_RenderDrawRect(renderer, &selectedCellRect);
+            }
             
             
             // Render game board
@@ -153,12 +154,21 @@ struct GameEngine {
                         finishedRendering = false;
                     }
                     
-
-                    SDL_RenderCopy(renderer, image, NULL, &fromDestination);
+                    // Handle animation from over the board
+                    auto cutoff = std::max(drawArea.y-fromDestination.y, 0);
+                    int w, h;
+                    SDL_QueryTexture(image, NULL, NULL, &w, &h);
+                    SDL_Rect srcRect = {0,cutoff,w,h-cutoff};
+                    
+                    if (fromDestination.y < drawArea.y) {
+                        fromDestination.y = drawArea.y;
+                        fromDestination.h -= cutoff;
+                    }
+                
+                    
+                    SDL_RenderCopy(renderer, image, &srcRect, &fromDestination);
                 }
             }
-            
-            
             
             SDL_RenderPresent(renderer);
             if (finishedRendering) {
