@@ -14,7 +14,6 @@ struct GameEngine {
     std::unordered_map<CandyCrush::Cell, SDL_Texture*> cellImages;
     SDL_Texture* backgroundImage = nullptr;
     SDL_Window* window = nullptr;
-//    SDL_Surface* screenSurface = nullptr;
     SDL_Renderer * renderer;
     
     CandyCrush game;
@@ -30,17 +29,6 @@ struct GameEngine {
     
     const int windowWidth = 755;
     const int windowHeight = 600;
-    
-    
-    SDL_Surface* surfaceForText(std::string text) {
-        //this opens a font style and sets a size
-        SDL_Color White = {255, 255, 255};  // this is the color in rgb format, maxing out all would give you the color white, and it will be your text's color
-        SDL_Surface* surfaceMessage = TTF_RenderText_Solid(scoreLabelFont, text.c_str(), White); // as TTF_RenderText_Solid could only be used on SDL_Surface then you have to create the surface first
-        if (surfaceMessage == nullptr) {
-            std::cout << "SDL_Surface Error: " << SDL_GetError() << std::endl;
-        }
-        return surfaceMessage;
-    }
     
     GameEngine() {
         if( SDL_Init( SDL_INIT_VIDEO ) < 0 ) {
@@ -125,7 +113,15 @@ struct GameEngine {
             auto timeLeftLabelRect = SDL_Rect{80,430,timeLeftLabel->w,timeLeftLabel->h};
             SDL_Texture* timeLeftTexture = SDL_CreateTextureFromSurface( renderer, timeLeftLabel );
             SDL_RenderCopy(renderer, timeLeftTexture, NULL, &timeLeftLabelRect);
+            
+            
             SDL_DestroyTexture(timeLeftTexture);
+            
+                auto selectedCell = cellPositionFromCoordinates(lastX, lastY);
+                auto selectedCellRect = rectForCellPosition(selectedCell, cellImages[CandyCrush::Blue]);
+                SDL_SetRenderDrawColor(renderer, 255, 80, 80, 1);
+                SDL_RenderDrawRect(renderer, &selectedCellRect);
+            
             
             // Render game board
             for (auto row = 0; row < game.getGameBoard().rows; row++) {
@@ -156,9 +152,14 @@ struct GameEngine {
                     if (fromDestination.x != toDestination.x || fromDestination.y != toDestination.y) {
                         finishedRendering = false;
                     }
+                    
+
                     SDL_RenderCopy(renderer, image, NULL, &fromDestination);
                 }
             }
+            
+            
+            
             SDL_RenderPresent(renderer);
             if (finishedRendering) {
 //                SDL_Delay(200);
@@ -196,7 +197,6 @@ struct GameEngine {
             
             while( SDL_PollEvent( &e ) != 0 ) {
                 
-                
                 if( e.type == SDL_QUIT ) {
                     quit = true;
                 }
@@ -211,14 +211,17 @@ struct GameEngine {
                     std::cout << move << std::endl;
                     
                     if (game.getGameBoard().areCellsAdjacent(move.from, move.to)) {
-                        game.play(move, lamm);
                         lastX = -1;
                         lastY = -1;
+                        game.play(move, lamm);
+
                     } else {
                         std::cout << "Could not make the move" << std::endl;
                         lastX = x;
                         lastY = y;
                     }
+                    auto gameBoardChange = CandyCrushGameBoardChange(game);
+                    render(gameBoardChange);
                 }
                 
                 if (e.type == SDL_MOUSEBUTTONUP && lastX != -1) {
@@ -230,13 +233,16 @@ struct GameEngine {
                     SDL_GetMouseState(&x, &y);
                     auto move = GameBoard::CellSwapMove(cellPositionFromCoordinates(x, y), cellPositionFromCoordinates(lastX, lastY));
                     if (game.getGameBoard().areCellsAdjacent(move.from, move.to)) {
-                        game.play(move, lamm);
                         lastX = -1;
                         lastY = -1;
+                        game.play(move, lamm);
+                        auto gameBoardChange = CandyCrushGameBoardChange(game);
+                        render(gameBoardChange);
                     }
                 }
+                
             }
-            SDL_Delay(10);
+            SDL_Delay(1);
         }
     }
 };
