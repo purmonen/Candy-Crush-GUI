@@ -11,17 +11,18 @@
 
 struct GameEngine {
     
-    std::unordered_map<CandyCrush::Cell, SDL_Surface*> cellImages;
-    SDL_Surface* backgroundImage = nullptr;
+    std::unordered_map<CandyCrush::Cell, SDL_Texture*> cellImages;
+    SDL_Texture* backgroundImage = nullptr;
     SDL_Window* window = nullptr;
-    SDL_Surface* screenSurface = nullptr;
-    
+//    SDL_Surface* screenSurface = nullptr;
+    SDL_Renderer * renderer;
     
     CandyCrush game;
     const SDL_Rect drawArea = SDL_Rect{340,110,320,320};
     const int cellHeight = drawArea.h / (int)game.getGameBoard().rows;
     
-    TTF_Font* Sans;
+    TTF_Font* scoreLabelFont;
+    TTF_Font* timeLeftLabelFont;
     const int cellWidth = drawArea.w / (int)game.getGameBoard().columns;
     
     int lastX = -1;
@@ -34,7 +35,7 @@ struct GameEngine {
     SDL_Surface* surfaceForText(std::string text) {
         //this opens a font style and sets a size
         SDL_Color White = {255, 255, 255};  // this is the color in rgb format, maxing out all would give you the color white, and it will be your text's color
-        SDL_Surface* surfaceMessage = TTF_RenderText_Solid(Sans, text.c_str(), White); // as TTF_RenderText_Solid could only be used on SDL_Surface then you have to create the surface first
+        SDL_Surface* surfaceMessage = TTF_RenderText_Solid(scoreLabelFont, text.c_str(), White); // as TTF_RenderText_Solid could only be used on SDL_Surface then you have to create the surface first
         if (surfaceMessage == nullptr) {
             std::cout << "SDL_Surface Error: " << SDL_GetError() << std::endl;
         }
@@ -57,70 +58,84 @@ struct GameEngine {
             printf( "Window could not be created! SDL_Error: %s\n", SDL_GetError() );
             throw;
         }
-        Sans = TTF_OpenFont("/Library/Fonts/Arial.ttf", 54);
-        screenSurface = SDL_GetWindowSurface( window );
+        scoreLabelFont = TTF_OpenFont("/Library/Fonts/Phosphate.ttc", 44);
+        if (!scoreLabelFont) {
+            throw;
+        }
         
+        timeLeftLabelFont = TTF_OpenFont("/Library/Fonts/Phosphate.ttc", 54);
+        if (!timeLeftLabelFont) {
+            throw;
+        }
+        
+        renderer = SDL_CreateRenderer(window, -1, 0);
+
         // Load assets
         cellImages = {
-            {CandyCrush::Blue, IMG_Load("assets/Blue.png")},
-            {CandyCrush::Green, IMG_Load("assets/Green.png")},
-            {CandyCrush::Red, IMG_Load("assets/Red.png")},
-            {CandyCrush::Purple, IMG_Load("assets/Purple.png")},
-            {CandyCrush::Yellow, IMG_Load("assets/Yellow.png")},
+            {CandyCrush::Blue, SDL_CreateTextureFromSurface(renderer, IMG_Load("assets/Blue.png"))},
+            {CandyCrush::Green, SDL_CreateTextureFromSurface(renderer, IMG_Load("assets/Green.png"))},
+            {CandyCrush::Red, SDL_CreateTextureFromSurface(renderer, IMG_Load("assets/Red.png"))},
+            {CandyCrush::Purple, SDL_CreateTextureFromSurface(renderer, IMG_Load("assets/Purple.png"))},
+            {CandyCrush::Yellow, SDL_CreateTextureFromSurface(renderer, IMG_Load("assets/Yellow.png"))},
         };
-        backgroundImage = IMG_Load("assets/BackGround.jpg");
+        
+        backgroundImage = SDL_CreateTextureFromSurface(renderer, IMG_Load("assets/BackGround.jpg"));
     }
     
     ~GameEngine() {
         for (auto cellImage: cellImages) {
-            SDL_FreeSurface(cellImage.second);
+            SDL_DestroyTexture(cellImage.second);
         }
-        SDL_FreeSurface(backgroundImage);
-        if (timeLeftLabel != nullptr) {
-            SDL_FreeSurface(timeLeftLabel);
-        }
-        if (scoreLabel != nullptr) {
-            SDL_FreeSurface(scoreLabel);
-        }
+        SDL_DestroyTexture(backgroundImage);
     }
     
     SDL_Surface* timeLeftLabel = nullptr;
     SDL_Surface* scoreLabel = nullptr;
     
-    SDL_Rect rectForCellPosition(GameBoard::CellPosition cellPosition, const SDL_Surface * image) {
-        return SDL_Rect{cellWidth*cellPosition.column+cellWidth/2-image->w/2 + drawArea.x, cellHeight*cellPosition.row+cellHeight/2-image->h/2+drawArea.y, cellWidth, cellHeight};
-    }
-    
-    SDL_Rect rectForCellPosition(int row, int column, const SDL_Surface * image) {
-        return SDL_Rect{cellWidth*column+cellWidth/2-image->w/2 + drawArea.x, cellHeight*row+cellHeight/2-image->h/2+drawArea.y, cellWidth, cellHeight};
+    SDL_Rect rectForCellPosition(const GameBoard::CellPosition& cellPosition, SDL_Texture * image) {
+        int w, h;
+        SDL_QueryTexture(image, NULL, NULL, &w, &h);
+        return SDL_Rect{cellWidth*cellPosition.column+cellWidth/2-w/2 + drawArea.x, cellHeight*cellPosition.row+cellHeight/2-h/2+drawArea.y, w, h};
     }
     
     void render(CandyCrushGameBoardChange& gameBoardChange) {
+        auto startTime = std::chrono::high_resolution_clock::now();
         auto finishedRendering = false;
         auto distance = 0;
         while (!finishedRendering){
-            SDL_BlitSurface(backgroundImage, NULL, screenSurface, NULL );
             finishedRendering = true;
-            if (scoreLabel != nullptr) {
-                SDL_FreeSurface(scoreLabel);
-            }
-            scoreLabel = surfaceForText("Score: " + std::to_string(game.getScore()));
-            auto scoreLabelRect = SDL_Rect{0,0,100,100};
-            SDL_BlitSurface(scoreLabel, NULL, screenSurface, &scoreLabelRect);
-            if (timeLeftLabel != nullptr) {
-                SDL_FreeSurface(timeLeftLabel);
-            }
-            timeLeftLabel = surfaceForText(std::to_string(game.numberOfSecondsLeft()));
-            auto timeLeftLabelRect = SDL_Rect{80,430,100,100};
-            SDL_BlitSurface(timeLeftLabel, NULL, screenSurface, &timeLeftLabelRect);
+            SDL_RenderClear(renderer);
+        
+            // Render background image
+            SDL_RenderCopy(renderer, backgroundImage, NULL, NULL);
             
+            SDL_Color White = {255, 255, 255};
+            
+            // Render score label
+            auto scoreText = "Score: " + std::to_string(game.getScore());
+            SDL_Surface* scoreLabel = TTF_RenderText_Solid(scoreLabelFont, scoreText.c_str(), White);
+            SDL_Texture* scoreLabelTexture = SDL_CreateTextureFromSurface( renderer, scoreLabel );
+            auto scoreLabelRect = SDL_Rect{0,0,scoreLabel->w,scoreLabel->h};
+            SDL_RenderCopy(renderer, scoreLabelTexture, NULL, &scoreLabelRect);
+            SDL_DestroyTexture(scoreLabelTexture);
+            
+            // Render time left label
+            auto timeLeftText = std::to_string(game.numberOfSecondsLeft());
+            SDL_Surface* timeLeftLabel = TTF_RenderText_Solid(scoreLabelFont, timeLeftText.c_str(), White);
+            auto timeLeftLabelRect = SDL_Rect{80,430,timeLeftLabel->w,timeLeftLabel->h};
+            SDL_Texture* timeLeftTexture = SDL_CreateTextureFromSurface( renderer, timeLeftLabel );
+            SDL_RenderCopy(renderer, timeLeftTexture, NULL, &timeLeftLabelRect);
+            SDL_DestroyTexture(timeLeftTexture);
+            
+            // Render game board
             for (auto row = 0; row < game.getGameBoard().rows; row++) {
                 for (auto column = 0; column < game.getGameBoard().columns; column++) {
                     auto to = GameBoard::CellPosition(row, column);
                     auto from = gameBoardChange.gameBoardChange[to].first;
                     auto cell = gameBoardChange.gameBoardChange[to].second;
                     
-                    auto image = cellImages[cell];
+                    const auto& image = cellImages[cell];
+                    
                     
                     auto fromDestination = rectForCellPosition(from, image);
                     auto toDestination = rectForCellPosition(to, image);
@@ -141,18 +156,20 @@ struct GameEngine {
                     if (fromDestination.x != toDestination.x || fromDestination.y != toDestination.y) {
                         finishedRendering = false;
                     }
-                    
-                    SDL_BlitSurface( image, NULL, screenSurface, &fromDestination );
+                    SDL_RenderCopy(renderer, image, NULL, &fromDestination);
                 }
             }
-            SDL_UpdateWindowSurface(window);
+            SDL_RenderPresent(renderer);
             if (finishedRendering) {
-                SDL_Delay(200);
+//                SDL_Delay(200);
             } else {
-                SDL_Delay(17);
+                SDL_Delay(3);
             }
-            distance += 3;
+            distance += 1;
         }
+        auto currentTime = std::chrono::high_resolution_clock::now();
+        int numberOfMilliSecondsElapsed = (int)std::chrono::duration_cast<std::chrono::milliseconds>(currentTime-startTime).count();
+        std::cout << "Rendering took: " << numberOfMilliSecondsElapsed << "ms" << std::endl;
     }
     
     GameBoard::CellPosition cellPositionFromCoordinates(int x, int y) const {
