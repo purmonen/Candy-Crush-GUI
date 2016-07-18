@@ -169,14 +169,17 @@ struct GameEngine {
                         finishedRendering = false;
                     }
                     
+                    
+                    auto animatedDrawArea = drawArea.y-18;
+                    
                     // Handle animation from over the board
-                    auto cutoff = std::max(drawArea.y-fromDestination.y, 0);
+                    auto cutoff = std::max(animatedDrawArea-fromDestination.y, 0);
                     int w, h;
                     SDL_QueryTexture(image, NULL, NULL, &w, &h);
                     SDL_Rect srcRect = {0,cutoff,w,h-cutoff};
                     
-                    if (fromDestination.y < drawArea.y) {
-                        fromDestination.y = drawArea.y;
+                    if (fromDestination.y < animatedDrawArea) {
+                        fromDestination.y = animatedDrawArea;
                         fromDestination.h -= cutoff;
                     }
                     SDL_RenderCopy(renderer, image, &srcRect, &fromDestination);
@@ -184,11 +187,7 @@ struct GameEngine {
             }
             
             SDL_RenderPresent(renderer);
-            if (finishedRendering) {
-//                SDL_Delay(200);
-            } else {
-                SDL_Delay(5);
-            }
+            SDL_Delay(5);
             distance += 1;
         }
         auto currentTime = std::chrono::high_resolution_clock::now();
