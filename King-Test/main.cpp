@@ -18,13 +18,11 @@ struct GameEngine {
     
     
     CandyCrush game;
-    const int numberOfRows = (int)game.getGameBoard().rows;
-    const int numberOfColumns = (int)game.getGameBoard().columns;
     const SDL_Rect drawArea = SDL_Rect{340,110,320,320};
-    const int cellHeight = drawArea.h / numberOfRows;
+    const int cellHeight = drawArea.h / (int)game.getGameBoard().rows;
     
     TTF_Font* Sans;
-    const int cellWidth = drawArea.w / numberOfColumns;
+    const int cellWidth = drawArea.w / (int)game.getGameBoard().columns;
     
     
     int lastX = -1;
@@ -91,43 +89,6 @@ struct GameEngine {
     
     SDL_Surface* timeLeftLabel = nullptr;
     SDL_Surface* scoreLabel = nullptr;
-    //    void render(SDL_Surface* screenSurface, const CandyCrush& game, SDL_Rect drawArea, size_t numberOfSecondsLeft) {
-    //        //SDL_FillRect(screenSurface, NULL, 0x000000);
-    //        SDL_BlitSurface(backgroundImage, NULL, screenSurface, NULL );
-    //
-    //        for (auto row = 0; row < game.getGameBoard().rows; row++) {
-    //            for (auto column = 0; column < game.getGameBoard().columns; column++) {
-    //                auto cell = game.getGameBoard()[row][column];
-    //                auto image = cellImages[cell];
-    //
-    //                auto destination = SDL_Rect{cellWidth*column+cellWidth/2-image->w/2 + drawArea.x, cellHeight*row+cellHeight/2-image->h/2+drawArea.y, cellWidth, cellHeight};
-    //
-    //                if (lastX != -1 && GameBoard::CellPosition(row, column) == cellPositionFromCoordinates(lastX, lastY)) {
-    //
-    //                    // Draw dark background around selected cell
-    //                    auto destination = SDL_Rect{cellWidth*column + drawArea.x, cellHeight*row + drawArea.y, cellWidth, cellHeight};
-    //                    SDL_FillRect(screenSurface, &destination, 0b111);
-    //                }
-    //                SDL_BlitSurface( image, NULL, screenSurface, &destination );
-    //            }
-    //        }
-    //        if (scoreLabel != nullptr) {
-    //            SDL_FreeSurface(scoreLabel);
-    //        }
-    //        scoreLabel = surfaceForText("Score: " + std::to_string(game.getScore()));
-    //        auto scoreLabelRect = SDL_Rect{0,0,100,100};
-    //
-    //
-    //        SDL_BlitSurface(scoreLabel, NULL, screenSurface, &scoreLabelRect);
-    //
-    //        if (timeLeftLabel != nullptr) {
-    //            SDL_FreeSurface(timeLeftLabel);
-    //        }
-    //        timeLeftLabel = surfaceForText(std::to_string(numberOfSecondsLeft));
-    //        auto timeLeftLabelRect = SDL_Rect{80,430,100,100};
-    //        SDL_BlitSurface(timeLeftLabel, NULL, screenSurface, &timeLeftLabelRect);
-    //        SDL_UpdateWindowSurface(window);
-    //    }
     
     SDL_Rect rectForCellPosition(GameBoard::CellPosition cellPosition, const SDL_Surface * image) {
         return SDL_Rect{cellWidth*cellPosition.column+cellWidth/2-image->w/2 + drawArea.x, cellHeight*cellPosition.row+cellHeight/2-image->h/2+drawArea.y, cellWidth, cellHeight};
@@ -137,7 +98,7 @@ struct GameEngine {
         return SDL_Rect{cellWidth*column+cellWidth/2-image->w/2 + drawArea.x, cellHeight*row+cellHeight/2-image->h/2+drawArea.y, cellWidth, cellHeight};
     }
     
-    void render(size_t numberOfSecondsLeft, CandyCrushGameBoardChange gameBoardChange, double percentage) {
+    void render(CandyCrushGameBoardChange gameBoardChange, double percentage) {
         //SDL_FillRect(screenSurface, NULL, 0x000000);
         SDL_BlitSurface(backgroundImage, NULL, screenSurface, NULL );
         
@@ -167,18 +128,18 @@ struct GameEngine {
         if (timeLeftLabel != nullptr) {
             SDL_FreeSurface(timeLeftLabel);
         }
-        timeLeftLabel = surfaceForText(std::to_string(numberOfSecondsLeft));
+        timeLeftLabel = surfaceForText(std::to_string(game.numberOfSecondsLeft()));
         auto timeLeftLabelRect = SDL_Rect{80,430,100,100};
         SDL_BlitSurface(timeLeftLabel, NULL, screenSurface, &timeLeftLabelRect);
         SDL_UpdateWindowSurface(window);
     }
     
     void updateBoard(CandyCrushGameBoardChange gameBoardChange) {
-        auto animationTimeInMilliseconds = 1000;
+        auto animationTimeInMilliseconds = 300;
         auto fps = 30;
         auto iterations = fps * animationTimeInMilliseconds / 100;
         for (auto i = 0; i < iterations; i++) {
-            render(60, gameBoardChange, i/(double)(iterations-1));
+            render(gameBoardChange, i/(double)(iterations-1));
             SDL_Delay(animationTimeInMilliseconds/iterations);
         }
         //SDL_Delay(3000);
@@ -193,21 +154,12 @@ struct GameEngine {
         SDL_Event e;
         bool isMouseDown = false;
         
-        auto start = std::chrono::high_resolution_clock::now();
-        auto numberOfSeconds = 60;
-        
-        render(numberOfSeconds, CandyCrushGameBoardChange(game), 1);
+        render(CandyCrushGameBoardChange(game), 1);
         
         auto lamm = [&](CandyCrushGameBoardChange gameBoardChange) {
             updateBoard(gameBoardChange);
         };
         while( !quit ) {
-            auto end = std::chrono::high_resolution_clock::now();
-            auto duration = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
-            auto numberOfSecondsLeft = numberOfSeconds-duration;
-            //            CandyCrushRandomBot bot;
-            //            game.play(bot.selectMove(game), lamm);
-            //SDL_Delay(<#Uint32 ms#>)
             while( SDL_PollEvent( &e ) != 0 ) {
                 
                 if( e.type == SDL_QUIT ) {
@@ -246,9 +198,8 @@ struct GameEngine {
                         lastX = -1;
                         lastY = -1;
                     }
-                    
                 }
-                render(numberOfSeconds, CandyCrushGameBoardChange(game), 1);
+                render(CandyCrushGameBoardChange(game), 1);
                 
             }
             
@@ -259,6 +210,7 @@ struct GameEngine {
 };
 
 
+#include <array>
 int main( int argc, char* args[] )
 {
     GameEngine gameEngine;

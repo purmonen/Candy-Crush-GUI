@@ -47,6 +47,8 @@ bool CandyCrush::performMove(GameBoard::CellSwapMove move, GameBoardChangeCallba
         return false;
     }
     
+    
+    
     auto gameBoardChange = CandyCrushGameBoardChange(*this);
     gameBoardChange.gameBoardChange[move.from] = {move.to, gameBoard[move.to]};
     gameBoardChange.gameBoardChange[move.to] = {move.from, gameBoard[move.from]};
@@ -148,14 +150,11 @@ bool CandyCrush::performMove(GameBoard::CellSwapMove move, GameBoardChangeCallba
     }
     
     if (oldGame.score == score) {
-        
         gameBoardChange.gameBoardChange[move.from] = {move.to, gameBoard[move.to]};
         gameBoardChange.gameBoardChange[move.to] = {move.from, gameBoard[move.from]};
-        
         if (callback != nullptr) {
             callback(gameBoardChange);
         }
-        
         *this = oldGame;
         return false;
     }
@@ -179,29 +178,30 @@ const CandyCrush::CandyCrushGameBoard& CandyCrush::getGameBoard() const {
 }
 
 bool CandyCrush::operator==(const CandyCrush & game) const {
-    return numberOfMovesLeft == game.numberOfMovesLeft && gameBoard == game.gameBoard;
+    return gameBoard == game.gameBoard;
 }
 
 int CandyCrush::getScore() const {
     return score;
 }
 
-int CandyCrush::getNumberOfMovesLeft() const {
-    return numberOfMovesLeft;
-}
-
 bool CandyCrush::play(GameBoard::CellSwapMove move, GameBoardChangeCallback callback) {
     if (!gameOver()) {
         auto validMove = performMove(move, callback);
         clearAllMatches(callback);
-        numberOfMovesLeft--;
         return validMove;
     }
     return false;
 }
 
 bool CandyCrush::gameOver() const {
-    return numberOfMovesLeft <= 0 || legalMoves().empty();
+    return numberOfSecondsLeft() <= 0 || legalMoves().empty();
+}
+
+int CandyCrush::numberOfSecondsLeft() const {
+    auto currentTime = std::chrono::high_resolution_clock::now();
+    int numberOfSecondsElapsed = (int)std::chrono::duration_cast<std::chrono::seconds>(currentTime-startTime).count();
+    return numberOfSecondsElapsed < timeLimitInSeconds ? timeLimitInSeconds-numberOfSecondsElapsed : 0;
 }
 
 std::vector<GameBoard::CellSwapMove> CandyCrush::legalMoves() const {
@@ -209,8 +209,7 @@ std::vector<GameBoard::CellSwapMove> CandyCrush::legalMoves() const {
     for (auto row = 0 ; row < gameBoard.rows; row++) {
         for (auto column = 0; column < gameBoard.columns; column++) {
             GameBoard::CellPosition cell(row, column);
-            for (auto direction: {GameBoard::Up, GameBoard::Right, GameBoard::Down, GameBoard::Left}) {
-                auto adjacentCell = cell.cellAtDirection(direction);
+            for (auto adjacentCell: gameBoard.adjacentCells(cell)) {
                 if (isLegalMove(GameBoard::CellSwapMove(cell, adjacentCell))) {
                     moves.push_back(GameBoard::CellSwapMove(cell, adjacentCell));
                 }
@@ -220,38 +219,8 @@ std::vector<GameBoard::CellSwapMove> CandyCrush::legalMoves() const {
     return moves;
 }
 
-int CandyCrush::run(CandyCrushPlayer& player, bool showOutput = false) {
-    auto game = CandyCrush();
-    while (!game.gameOver()) {
-        if (showOutput) {
-            std::cout << game;
-        }
-        game.play(player.selectMove(game));
-    }
-    if (showOutput) {
-        std::cout << game;
-    }
-    return game.score;
-}
-
-int CandyCrush::run(CandyCrushPlayer& player, int numberOfGames) {
-    auto totalScore = 0;
-    for (int i = 0; i < numberOfGames; i++) {
-        totalScore += run(player, false);
-    }
-    //    std::cout << "Average score: " << totalScore / numberOfGames << std::endl;
-    return totalScore / numberOfGames;
-}
-
-CandyCrush CandyCrush::gameForMove(GameBoard::CellSwapMove move) const {
-    auto nextGame = *this;
-    nextGame.play(move);
-    return nextGame;
-}
-
 std::ostream& operator<<(std::ostream& os, const CandyCrush& game) {
     os << "--------------------" << std::endl;
-    os << "Moves left: " << game.getNumberOfMovesLeft() << std::endl;
     os << "Score: " << game.getScore() << std::endl;
     std::unordered_map<CandyCrush::Cell, std::string> cellString {
         {CandyCrush::Green, "G"},
