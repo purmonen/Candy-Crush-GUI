@@ -54,6 +54,7 @@ public:
 
 struct CandyCrushGameBoardChange {
     std::unordered_map<GameBoard::CellPosition, std::pair<GameBoard::CellPosition, CandyCrush::Cell>> gameBoardChange;
+    std::vector<std::pair<GameBoard::CellPosition, CandyCrush::Cell>> removedCells;
     
     CandyCrushGameBoardChange(CandyCrush game) {
         for (auto row = 0; row < game.getGameBoard().rows; row++) {
@@ -61,8 +62,6 @@ struct CandyCrushGameBoardChange {
                 gameBoardChange[GameBoard::CellPosition(row, column)] = {GameBoard::CellPosition(row, column), game.getGameBoard()[GameBoard::CellPosition(row, column)]};
             }
         }
-        
-        
     }
     
     

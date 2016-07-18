@@ -78,6 +78,12 @@ bool CandyCrush::performMove(GameBoard::CellSwapMove move, GameBoardChangeCallba
                 if (cellsMatched) {
                     lastColumn++;
                 }
+                
+                
+                for (auto matchedColumn = lastColumn-numberOfMatches; matchedColumn < lastColumn; matchedColumn++) {
+                    gameBoardChange.removedCells.push_back({GameBoard::CellPosition(row, matchedColumn), gameBoard[row][matchedColumn]});
+                }
+                
                 for (auto matchedColumn = lastColumn-numberOfMatches; matchedColumn < lastColumn; matchedColumn++) {
                     for (auto matchedRow = row-1; matchedRow >= 0; matchedRow--) {
                         gameBoardChange.gameBoardChange[GameBoard::CellPosition(matchedRow+1, matchedColumn)] = {GameBoard::CellPosition(matchedRow, matchedColumn), gameBoard[GameBoard::CellPosition(matchedRow, matchedColumn)]};
@@ -115,15 +121,23 @@ bool CandyCrush::performMove(GameBoard::CellSwapMove move, GameBoardChangeCallba
                     prevRow--;
                 }
                 
+                for (auto i = prevRow+1; i <= prevRow+numberOfMatches; i++) {
+                    gameBoardChange.removedCells.push_back({GameBoard::CellPosition(i, column), gameBoard[i][column]});
+                }
+                
                 while (prevRow >= 0) {
                     gameBoardChange.gameBoardChange[GameBoard::CellPosition(prevRow+numberOfMatches, column)] = {GameBoard::CellPosition(prevRow, column), gameBoard[GameBoard::CellPosition(prevRow, column)]};
                     
+                    
                     gameBoard[prevRow+numberOfMatches][column] = gameBoard[prevRow][column];
+                    
                     prevRow--;
                 }
                 
                 for (auto i = 0; i < numberOfMatches; i++) {
+                    
                     gameBoard[i][column] = randomCell();
+                    
                     gameBoardChange.gameBoardChange[GameBoard::CellPosition(i, column)] = {GameBoard::CellPosition(i-numberOfMatches, column), gameBoard[i][column]};
 
                 }

@@ -124,6 +124,21 @@ struct GameEngine {
             }
             
             
+            for (auto removedCell: gameBoardChange.removedCells) {
+                auto image = cellImages[removedCell.second];
+                auto fromDestination = rectForCellPosition(removedCell.first, image);
+                
+                SDL_SetRenderDrawColor(renderer, 255, 80, 80, 1);
+//                SDL_RenderFillRect(renderer, &fromDestination);
+                
+                fromDestination.x += distance/2;
+                fromDestination.y += distance/2;
+                fromDestination.w -= distance;
+                fromDestination.h -= distance;
+                
+                SDL_RenderCopy(renderer, image, nullptr, &fromDestination);
+            }
+            
             // Render game board
             for (auto row = 0; row < game.getGameBoard().rows; row++) {
                 for (auto column = 0; column < game.getGameBoard().columns; column++) {
@@ -164,8 +179,6 @@ struct GameEngine {
                         fromDestination.y = drawArea.y;
                         fromDestination.h -= cutoff;
                     }
-                
-                    
                     SDL_RenderCopy(renderer, image, &srcRect, &fromDestination);
                 }
             }
@@ -174,7 +187,7 @@ struct GameEngine {
             if (finishedRendering) {
 //                SDL_Delay(200);
             } else {
-                SDL_Delay(3);
+                SDL_Delay(5);
             }
             distance += 1;
         }
