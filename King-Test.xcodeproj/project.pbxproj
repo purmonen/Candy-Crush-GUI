@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		2619C66A1D3E786800D0B721 /* assets in CopyFiles */ = {isa = PBXBuildFile; fileRef = 2619C6691D3E74A200D0B721 /* assets */; };
 		267ACDD81D3D242F00E758FD /* CandyCrush.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 267ACDD31D3D242F00E758FD /* CandyCrush.cpp */; };
-		267ACDD91D3D242F00E758FD /* GameBoard.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 267ACDD51D3D242F00E758FD /* GameBoard.cpp */; };
 		267ACDDA1D3D242F00E758FD /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 267ACDD71D3D242F00E758FD /* main.cpp */; };
 		267ACDDE1D3D246200E758FD /* SDL2_image.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 267ACDDB1D3D246200E758FD /* SDL2_image.framework */; };
 		267ACDDF1D3D246200E758FD /* SDL2_ttf.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 267ACDDC1D3D246200E758FD /* SDL2_ttf.framework */; };
@@ -35,7 +34,6 @@
 		267ACDC91D3D23FB00E758FD /* King-Test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "King-Test"; sourceTree = BUILT_PRODUCTS_DIR; };
 		267ACDD31D3D242F00E758FD /* CandyCrush.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CandyCrush.cpp; sourceTree = "<group>"; };
 		267ACDD41D3D242F00E758FD /* CandyCrush.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = CandyCrush.hpp; sourceTree = "<group>"; };
-		267ACDD51D3D242F00E758FD /* GameBoard.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GameBoard.cpp; sourceTree = "<group>"; };
 		267ACDD61D3D242F00E758FD /* GameBoard.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = GameBoard.hpp; sourceTree = "<group>"; };
 		267ACDD71D3D242F00E758FD /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		267ACDDB1D3D246200E758FD /* SDL2_image.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2_image.framework; path = ../../../../Library/Frameworks/SDL2_image.framework; sourceTree = "<group>"; };
@@ -81,7 +79,6 @@
 			children = (
 				267ACDD31D3D242F00E758FD /* CandyCrush.cpp */,
 				267ACDD41D3D242F00E758FD /* CandyCrush.hpp */,
-				267ACDD51D3D242F00E758FD /* GameBoard.cpp */,
 				267ACDD61D3D242F00E758FD /* GameBoard.hpp */,
 				267ACDD71D3D242F00E758FD /* main.cpp */,
 				2619C6681D3E731500D0B721 /* README */,
@@ -146,7 +143,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				267ACDD91D3D242F00E758FD /* GameBoard.cpp in Sources */,
 				267ACDD81D3D242F00E758FD /* CandyCrush.cpp in Sources */,
 				267ACDDA1D3D242F00E758FD /* main.cpp in Sources */,
 			);

@@ -191,94 +191,94 @@ struct GameEngine {
     
     
     void renderGameBoard(CandyCrushGameBoardChange& gameBoardChange, int move = 1) {
-        auto startTime = std::chrono::high_resolution_clock::now();
+        //        auto startTime = std::chrono::high_resolution_clock::now();
         auto finishedRendering = false;
         auto distance = 0;
-
-    
-
-            while (!finishedRendering){
-                finishedRendering = true;
-                SDL_RenderClear(renderer);
+        
+        
+        // Render until all cells have been moved to the place they belong
+        while (!finishedRendering){
+            finishedRendering = true;
+            SDL_RenderClear(renderer);
+            
+            renderBackground();
+            renderScore();
+            renderText(std::to_string(game.numberOfSecondsLeft()), 80, 415, timeLeftLabelFont);
+            
+            // Render rectangle around selected cell
+            auto selectedCell = cellPositionFromCoordinates(lastMouseDownX, lastMouseDownY);
+            if (game.getGameBoard().isCellValid(selectedCell)) {
+                auto selectedCellRect = rectForCellPosition(selectedCell, cellTextures[CandyCrush::Blue]);
+                SDL_SetRenderDrawColor(renderer, 255, 80, 80, 1);
+                SDL_RenderDrawRect(renderer, &selectedCellRect);
+            }
+            
+            for (auto removedCell: gameBoardChange.removedCells) {
+                auto image = cellTextures[removedCell.second];
+                auto fromDestination = rectForCellPosition(removedCell.first, image);
                 
-                renderBackground();
-                renderScore();
-                renderText(std::to_string(game.numberOfSecondsLeft()), 80, 415, timeLeftLabelFont);
+                fromDestination.x += distance/2;
+                fromDestination.y += distance/2;
+                fromDestination.w -= distance;
+                fromDestination.h -= distance;
                 
-                // Render rectangle around selected cell
-                auto selectedCell = cellPositionFromCoordinates(lastMouseDownX, lastMouseDownY);
-                if (game.getGameBoard().isCellValid(selectedCell)) {
-                    auto selectedCellRect = rectForCellPosition(selectedCell, cellTextures[CandyCrush::Blue]);
-                    SDL_SetRenderDrawColor(renderer, 255, 80, 80, 1);
-                    SDL_RenderDrawRect(renderer, &selectedCellRect);
-                }
-                
-                for (auto removedCell: gameBoardChange.removedCells) {
-                    auto image = cellTextures[removedCell.second];
-                    auto fromDestination = rectForCellPosition(removedCell.first, image);
+                SDL_RenderCopy(renderer, image, nullptr, &fromDestination);
+            }
+            
+            // Render game board
+            for (auto row = 0; row < game.getGameBoard().rows; row++) {
+                for (auto column = 0; column < game.getGameBoard().columns; column++) {
+                    auto to = GameBoard::CellPosition(row, column);
+                    auto from = gameBoardChange.gameBoardChange[to].first;
+                    auto cell = gameBoardChange.gameBoardChange[to].second;
                     
-                    fromDestination.x += distance/2;
-                    fromDestination.y += distance/2;
-                    fromDestination.w -= distance;
-                    fromDestination.h -= distance;
+                    const auto& image = cellTextures[cell];
                     
-                    SDL_RenderCopy(renderer, image, nullptr, &fromDestination);
-                }
-                
-                // Render game board
-                for (auto row = 0; row < game.getGameBoard().rows; row++) {
-                    for (auto column = 0; column < game.getGameBoard().columns; column++) {
-                        auto to = GameBoard::CellPosition(row, column);
-                        auto from = gameBoardChange.gameBoardChange[to].first;
-                        auto cell = gameBoardChange.gameBoardChange[to].second;
-                        
-                        const auto& image = cellTextures[cell];
-                        
-                        
-                        auto fromDestination = rectForCellPosition(from, image);
-                        auto toDestination = rectForCellPosition(to, image);
-                        
-                        
-                        if (toDestination.x > fromDestination.x) {
-                            fromDestination.x = std::min(fromDestination.x + distance, toDestination.x);
-                        } else {
-                            fromDestination.x = std::max(fromDestination.x - distance, toDestination.x);
-                        }
-                        
-                        if (toDestination.y > fromDestination.y) {
-                            fromDestination.y = std::min(fromDestination.y + distance, toDestination.y);
-                        } else {
-                            fromDestination.y = std::max(fromDestination.y - distance, toDestination.y);
-                        }
-                        
-                        if (fromDestination.x != toDestination.x || fromDestination.y != toDestination.y) {
-                            finishedRendering = false;
-                        }
-                        
-                        auto animatedgameBoardRect = gameBoardRect.y-18;
-                        
-                        // Handle animation from over the board
-                        auto cutoff = std::max(animatedgameBoardRect-fromDestination.y, 0);
-                        int w, h;
-                        SDL_QueryTexture(image, NULL, NULL, &w, &h);
-                        SDL_Rect srcRect = {0,cutoff,w,h-cutoff};
-                        
-                        if (fromDestination.y < animatedgameBoardRect) {
-                            fromDestination.y = animatedgameBoardRect;
-                            fromDestination.h -= cutoff;
-                        }
-                        SDL_RenderCopy(renderer, image, &srcRect, &fromDestination);
+                    
+                    auto fromDestination = rectForCellPosition(from, image);
+                    auto toDestination = rectForCellPosition(to, image);
+                    
+                    
+                    if (toDestination.x > fromDestination.x) {
+                        fromDestination.x = std::min(fromDestination.x + distance, toDestination.x);
+                    } else {
+                        fromDestination.x = std::max(fromDestination.x - distance, toDestination.x);
                     }
+                    
+                    if (toDestination.y > fromDestination.y) {
+                        fromDestination.y = std::min(fromDestination.y + distance, toDestination.y);
+                    } else {
+                        fromDestination.y = std::max(fromDestination.y - distance, toDestination.y);
+                    }
+                    
+                    if (fromDestination.x != toDestination.x || fromDestination.y != toDestination.y) {
+                        finishedRendering = false;
+                    }
+                    
+                    auto animatedgameBoardRect = gameBoardRect.y-18;
+                    
+                    // Handle animation from over the board
+                    auto cutoff = std::max(animatedgameBoardRect-fromDestination.y, 0);
+                    int w, h;
+                    SDL_QueryTexture(image, NULL, NULL, &w, &h);
+                    SDL_Rect srcRect = {0,cutoff,w,h-cutoff};
+                    
+                    if (fromDestination.y < animatedgameBoardRect) {
+                        fromDestination.y = animatedgameBoardRect;
+                        fromDestination.h -= cutoff;
+                    }
+                    SDL_RenderCopy(renderer, image, &srcRect, &fromDestination);
                 }
-                
-                
-                SDL_RenderPresent(renderer);
-                SDL_Delay(5);
-                distance += move;
+            }
+            
+            
+            SDL_RenderPresent(renderer);
+            SDL_Delay(5);
+            distance += move;
         }
-        auto currentTime = std::chrono::high_resolution_clock::now();
-        int numberOfMilliSecondsElapsed = (int)std::chrono::duration_cast<std::chrono::milliseconds>(currentTime-startTime).count();
-        std::cout << "Rendering took: " << numberOfMilliSecondsElapsed << "ms" << std::endl;
+        //        auto currentTime = std::chrono::high_resolution_clock::now();
+        //        int numberOfMilliSecondsElapsed = (int)std::chrono::duration_cast<std::chrono::milliseconds>(currentTime-startTime).count();
+        //        std::cout << "Rendering took: " << numberOfMilliSecondsElapsed << "ms" << std::endl;
     }
     
     void renderGameBoard() {
@@ -294,7 +294,7 @@ struct GameEngine {
         bool quit = false;
         bool isMouseDown = false;
         SDL_Event e;
-      
+        
         auto renderCallback = [&](CandyCrushGameBoardChange gameBoardChange) {
             renderGameBoard(gameBoardChange);
         };
@@ -302,20 +302,20 @@ struct GameEngine {
         bool hasShownGameOver = false;
         
         while( !quit ) {
-                if (game.gameOver()) {
-                    if (!hasShownGameOver) {
-                        hasShownGameOver = true;
-                        renderGameOver();
-                        SDL_RenderPresent(renderer);
-                    }
-                } else if (isFirstGame) {
-                    renderBackground();
-                    renderText("Click to start", 360, 250, scoreLabelFont);
+            if (game.gameOver()) {
+                if (!hasShownGameOver) {
+                    hasShownGameOver = true;
+                    renderGameOver();
                     SDL_RenderPresent(renderer);
-                } else {
-                    renderGameBoard();
                 }
-    
+            } else if (isFirstGame) {
+                renderBackground();
+                renderText("Click to start", 360, 250, scoreLabelFont);
+                SDL_RenderPresent(renderer);
+            } else {
+                renderGameBoard();
+            }
+            
             
             while( SDL_PollEvent( &e ) != 0 ) {
                 if( e.type == SDL_QUIT ) {
@@ -345,18 +345,13 @@ struct GameEngine {
                         isMouseDown = true;
                         int x, y;
                         SDL_GetMouseState(&x, &y);
-                        
                         auto move = GameBoard::CellSwapMove(cellPositionFromCoordinates(x, y), cellPositionFromCoordinates(lastMouseDownX, lastMouseDownY));
-                        
-                        std::cout << move << std::endl;
-                        
                         if (game.getGameBoard().areCellsAdjacent(move.from, move.to)) {
                             lastMouseDownX = -1;
                             lastMouseDownY = -1;
                             game.play(move, renderCallback);
                             
                         } else {
-                            std::cout << "Could not make the move" << std::endl;
                             lastMouseDownX = x;
                             lastMouseDownY = y;
                         }
@@ -381,7 +376,7 @@ struct GameEngine {
                     }
                 }
             }
-            SDL_Delay(1);
+            SDL_Delay(3);
         }
     }
 };

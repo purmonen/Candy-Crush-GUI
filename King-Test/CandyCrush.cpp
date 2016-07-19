@@ -230,7 +230,7 @@ std::ostream& operator<<(std::ostream& os, const CandyCrush& game) {
         //{CandyCrush::Purple, "!"}
     };
     
-    std::cout << std::endl;
+    os << std::endl;
     
     auto& gameBoard = game.getGameBoard();
     for (auto i = 0; i < gameBoard.rows; i++) {
@@ -239,6 +239,6 @@ std::ostream& operator<<(std::ostream& os, const CandyCrush& game) {
         }
         os << std::endl;
     }
-    std::cout << std::endl;
+    os << std::endl;
     return os;
 }
