@@ -97,6 +97,7 @@ struct GameEngine {
         SDL_Surface* label = TTF_RenderText_Solid(font, text.c_str(), whiteColor);
         auto labelRect = SDL_Rect{x, y, label->w,label->h};
         SDL_Texture* labelTexture = SDL_CreateTextureFromSurface( renderer, label );
+        SDL_FreeSurface(label);
         SDL_RenderCopy(renderer, labelTexture, NULL, &labelRect);
         SDL_DestroyTexture(labelTexture);
     }
