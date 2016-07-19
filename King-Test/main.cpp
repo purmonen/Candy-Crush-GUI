@@ -92,9 +92,9 @@ struct GameEngine {
     }
     
     
-    void renderText(std::string text, int x, int y) {
+    void renderText(std::string text, int x, int y, TTF_Font *font) {
         SDL_Color whiteColor = {255, 255, 255};
-        SDL_Surface* label = TTF_RenderText_Solid(scoreLabelFont, text.c_str(), whiteColor);
+        SDL_Surface* label = TTF_RenderText_Solid(font, text.c_str(), whiteColor);
         auto labelRect = SDL_Rect{x, y, label->w,label->h};
         SDL_Texture* labelTexture = SDL_CreateTextureFromSurface( renderer, label );
         SDL_RenderCopy(renderer, labelTexture, NULL, &labelRect);
@@ -103,7 +103,7 @@ struct GameEngine {
     
     
     void renderScore() {
-        renderText("Score: " + std::to_string(game.getScore()), 20, 20);
+        renderText("Score: " + std::to_string(game.getScore()), 20, 20, scoreLabelFont);
     }
     
     
@@ -182,14 +182,15 @@ struct GameEngine {
             depth++;
         }
         
-        SDL_Delay(200);
+        SDL_Delay(500);
         
         renderBackground();
-        renderText("GAME OVER", 390, 250);
+        renderText("GAME OVER", 390, 250, scoreLabelFont);
         renderScore();
     }
     
-    void render(CandyCrushGameBoardChange& gameBoardChange, int move = 1) {
+    
+    void renderGameBoard(CandyCrushGameBoardChange& gameBoardChange, int move = 1) {
         auto startTime = std::chrono::high_resolution_clock::now();
         auto finishedRendering = false;
         auto distance = 0;
@@ -202,7 +203,7 @@ struct GameEngine {
                 
                 renderBackground();
                 renderScore();
-                renderText(std::to_string(game.numberOfSecondsLeft()), 80, 430);
+                renderText(std::to_string(game.numberOfSecondsLeft()), 80, 415, timeLeftLabelFont);
                 
                 // Render rectangle around selected cell
                 auto selectedCell = cellPositionFromCoordinates(lastMouseDownX, lastMouseDownY);
@@ -274,11 +275,15 @@ struct GameEngine {
                 SDL_RenderPresent(renderer);
                 SDL_Delay(5);
                 distance += move;
-            
         }
         auto currentTime = std::chrono::high_resolution_clock::now();
         int numberOfMilliSecondsElapsed = (int)std::chrono::duration_cast<std::chrono::milliseconds>(currentTime-startTime).count();
         std::cout << "Rendering took: " << numberOfMilliSecondsElapsed << "ms" << std::endl;
+    }
+    
+    void renderGameBoard() {
+        auto gameBoardChange = CandyCrushGameBoardChange(game);
+        renderGameBoard(gameBoardChange);
     }
     
     GameBoard::CellPosition cellPositionFromCoordinates(int x, int y) const {
@@ -291,19 +296,12 @@ struct GameEngine {
         SDL_Event e;
       
         auto renderCallback = [&](CandyCrushGameBoardChange gameBoardChange) {
-            render(gameBoardChange);
+            renderGameBoard(gameBoardChange);
         };
-//    auto numberOfSecondsLeft = -1;
-        
         
         bool hasShownGameOver = false;
         
         while( !quit ) {
-            
-//            if (game.numberOfSecondsLeft() != numberOfSecondsLeft) {
-//                numberOfSecondsLeft = game.numberOfSecondsLeft();
-            
-            
                 if (game.gameOver()) {
                     if (!hasShownGameOver) {
                         hasShownGameOver = true;
@@ -312,15 +310,12 @@ struct GameEngine {
                     }
                 } else if (isFirstGame) {
                     renderBackground();
-                    renderText("Click to start", 360, 250);
+                    renderText("Click to start", 360, 250, scoreLabelFont);
                     SDL_RenderPresent(renderer);
                 } else {
-                    auto gameBoardChange = CandyCrushGameBoardChange(game);
-                    render(gameBoardChange);
+                    renderGameBoard();
                 }
     
-        
-            
             
             while( SDL_PollEvent( &e ) != 0 ) {
                 if( e.type == SDL_QUIT ) {
@@ -337,15 +332,15 @@ struct GameEngine {
                         hasShownGameOver = false;
                         
                         // Intro animation - all cells falls from the top in a triangular fashion
-                        CandyCrushGameBoardChange gameBoardChange(game);
+                        CandyCrushGameBoardChange triangularFallGameBoardChange(game);
                         for (auto row = 0; row < game.getGameBoard().rows; row++) {
                             for (auto column = 0; column < game.getGameBoard().columns; column++) {
-                                auto pair = gameBoardChange.gameBoardChange[{row, column}];
-                                gameBoardChange.gameBoardChange[{row, column}] = {{row-(int)game.getGameBoard().rows-(int)game.getGameBoard().columns+1+column, column}, pair.second};
+                                auto pair = triangularFallGameBoardChange.gameBoardChange[{row, column}];
+                                triangularFallGameBoardChange.gameBoardChange[{row, column}] = {{row-(int)game.getGameBoard().rows-(int)game.getGameBoard().columns+1+column, column}, pair.second};
                             }
                         }
                         
-                        render(gameBoardChange,3);
+                        renderGameBoard(triangularFallGameBoardChange,3);
                     } else {
                         isMouseDown = true;
                         int x, y;
@@ -365,8 +360,7 @@ struct GameEngine {
                             lastMouseDownX = x;
                             lastMouseDownY = y;
                         }
-                        auto gameBoardChange = CandyCrushGameBoardChange(game);
-                        render(gameBoardChange);
+                        renderGameBoard();
                     }
                 }
                 
@@ -383,8 +377,7 @@ struct GameEngine {
                         lastMouseDownX = -1;
                         lastMouseDownY = -1;
                         game.play(move, renderCallback);
-                        auto gameBoardChange = CandyCrushGameBoardChange(game);
-                        render(gameBoardChange);
+                        renderGameBoard();
                     }
                 }
             }
