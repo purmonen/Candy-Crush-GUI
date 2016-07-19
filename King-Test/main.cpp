@@ -97,22 +97,118 @@ struct GameEngine {
         
         if (firstGame) {
             SDL_RenderCopy(renderer, backgroundImage, NULL, NULL);
-                std::string timeLeftText = "Click to start";
-                SDL_Surface* timeLeftLabel = TTF_RenderText_Solid(scoreLabelFont, timeLeftText.c_str(), White);
-                auto timeLeftLabelRect = SDL_Rect{360, 250,timeLeftLabel->w,timeLeftLabel->h};
-                SDL_Texture* timeLeftTexture = SDL_CreateTextureFromSurface( renderer, timeLeftLabel );
-                SDL_RenderCopy(renderer, timeLeftTexture, NULL, &timeLeftLabelRect);
-                SDL_DestroyTexture(timeLeftTexture);
+            std::string timeLeftText = "Click to start";
+            SDL_Surface* timeLeftLabel = TTF_RenderText_Solid(scoreLabelFont, timeLeftText.c_str(), White);
+            auto timeLeftLabelRect = SDL_Rect{360, 250,timeLeftLabel->w,timeLeftLabel->h};
+            SDL_Texture* timeLeftTexture = SDL_CreateTextureFromSurface( renderer, timeLeftLabel );
+            SDL_RenderCopy(renderer, timeLeftTexture, NULL, &timeLeftLabelRect);
+            SDL_DestroyTexture(timeLeftTexture);
             SDL_RenderPresent(renderer);
         } else if (game.gameOver()) {
-
-                SDL_RenderCopy(renderer, backgroundImage, NULL, NULL);
-                std::string timeLeftText = "GAME OVER";
-                SDL_Surface* timeLeftLabel = TTF_RenderText_Solid(scoreLabelFont, timeLeftText.c_str(), White);
-                auto timeLeftLabelRect = SDL_Rect{390,250,timeLeftLabel->w,timeLeftLabel->h};
-                SDL_Texture* timeLeftTexture = SDL_CreateTextureFromSurface( renderer, timeLeftLabel );
-                SDL_RenderCopy(renderer, timeLeftTexture, NULL, &timeLeftLabelRect);
-                SDL_DestroyTexture(timeLeftTexture);
+            
+            bool isCellVisible[game.getGameBoard().rows][game.getGameBoard().columns];
+            for (auto row = 0; row < game.getGameBoard().rows; row++) {
+                for (auto column = 0; column < game.getGameBoard().columns; column++) {
+                    isCellVisible[row][column] = true;
+                }
+            }
+            
+            auto renderSpiral = [&](int selectedRow, int selectedColumn) {
+                for (int distance = 0; distance < cellWidth; distance += 3) {
+                    SDL_RenderClear(renderer);
+                    SDL_RenderCopy(renderer, backgroundImage, NULL, NULL);
+                    for (auto row = 0; row < game.getGameBoard().rows; row++) {
+                        for (auto column = 0; column < game.getGameBoard().columns; column++) {
+                            auto removedCell = gameBoardChange.gameBoardChange[GameBoard::CellPosition(row, column)];
+                            auto image = cellImages[removedCell.second];
+                            auto fromDestination = rectForCellPosition(removedCell.first, image);
+                            if (row == selectedRow && column == selectedColumn) {
+                                fromDestination.x += distance/2;
+                                fromDestination.y += distance/2;
+                                fromDestination.w -= distance;
+                                fromDestination.h -= distance;
+                                isCellVisible[row][column] = false;
+                                SDL_RenderCopy(renderer, image, nullptr, &fromDestination);
+                            } else if (isCellVisible[row][column]) {
+                                SDL_RenderCopy(renderer, image, nullptr, &fromDestination);
+                            }
+                            
+                        }
+                    }
+                    SDL_RenderPresent(renderer);
+//                    SDL_Delay(1);
+                }
+            };
+            
+            
+            int depth = 0;
+            while (depth <= game.getGameBoard().columns / 2) {
+                int topRow = depth;
+                for (auto selectedColumn = depth; selectedColumn < game.getGameBoard().columns-depth; selectedColumn++) {
+                    renderSpiral(topRow, selectedColumn);
+                }
+                
+                int rightColumn = (int)game.getGameBoard().columns-1-depth;
+                for (int selectedRow = depth+1; selectedRow < game.getGameBoard().rows-1-depth; selectedRow++) {
+                    renderSpiral(selectedRow, rightColumn);
+                }
+                
+                
+                int bottomRow = (int)game.getGameBoard().rows - depth - 1;
+                if (topRow != bottomRow) {
+                    for (int selectedColumn = (int)game.getGameBoard().columns-depth; selectedColumn >= depth; selectedColumn--) {
+                        renderSpiral(bottomRow, selectedColumn);
+                    }
+                }
+                
+                int leftColumn = depth;
+                if (leftColumn != rightColumn) {
+                    for (int selectedRow = (int)game.getGameBoard().rows-2-depth; selectedRow >= depth+1; selectedRow--) {
+                        renderSpiral(selectedRow, leftColumn);
+                    }
+                }
+                depth++;
+            }
+            
+            
+            //            for (auto doneRows = 0; doneRows < game.getGameBoard().rows; doneRows++) {
+            //
+            //            for (auto distance = 0; distance < cellWidth; distance++) {
+            //
+            //                SDL_RenderClear(renderer);
+            //                SDL_RenderCopy(renderer, backgroundImage, NULL, NULL);
+            //
+            //                for (auto row = 0; row < game.getGameBoard().rows; row++) {
+            //                    for (auto column = 0; column < game.getGameBoard().columns; column++) {
+            //                        auto removedCell = gameBoardChange.gameBoardChange[GameBoard::CellPosition(row, column)];
+            //                        auto image = cellImages[removedCell.second];
+            //                        auto fromDestination = rectForCellPosition(removedCell.first, image);
+            //                        if (row == doneRows) {
+            //
+            //                        fromDestination.x += distance/2;
+            //                        fromDestination.y += distance/2;
+            //                        fromDestination.w -= distance;
+            //                        fromDestination.h -= distance;
+            //                        SDL_RenderCopy(renderer, image, nullptr, &fromDestination);
+            //                        } else if (row > doneRows) {
+            //                        SDL_RenderCopy(renderer, image, nullptr, &fromDestination);
+            //                        }
+            //
+            //                    }
+            //                }
+            //                SDL_RenderPresent(renderer);
+            //                SDL_Delay(3);
+            //
+            //            }
+            //            }
+            
+            SDL_RenderCopy(renderer, backgroundImage, NULL, NULL);
+            std::string timeLeftText = "GAME OVER";
+            SDL_Surface* timeLeftLabel = TTF_RenderText_Solid(scoreLabelFont, timeLeftText.c_str(), White);
+            auto timeLeftLabelRect = SDL_Rect{390,250,timeLeftLabel->w,timeLeftLabel->h};
+            SDL_Texture* timeLeftTexture = SDL_CreateTextureFromSurface( renderer, timeLeftLabel );
+            SDL_RenderCopy(renderer, timeLeftTexture, NULL, &timeLeftLabelRect);
+            SDL_DestroyTexture(timeLeftTexture);
             
             
             
@@ -164,9 +260,6 @@ struct GameEngine {
                 for (auto removedCell: gameBoardChange.removedCells) {
                     auto image = cellImages[removedCell.second];
                     auto fromDestination = rectForCellPosition(removedCell.first, image);
-                    
-                    SDL_SetRenderDrawColor(renderer, 255, 80, 80, 1);
-                    //                SDL_RenderFillRect(renderer, &fromDestination);
                     
                     fromDestination.x += distance/2;
                     fromDestination.y += distance/2;
@@ -225,7 +318,7 @@ struct GameEngine {
                 
                 
                 SDL_RenderPresent(renderer);
-                    SDL_Delay(5);
+                SDL_Delay(5);
                 distance += move;
             }
         }
