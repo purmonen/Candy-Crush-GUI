@@ -271,7 +271,7 @@ struct GameEngine {
                         for (auto row = 0; row < game.getGameBoard().rows; row++) {
                             for (auto column = 0; column < game.getGameBoard().columns; column++) {
                                 auto pair = gameBoardChange.gameBoardChange[GameBoard::CellPosition(row, column)];
-                                gameBoardChange.gameBoardChange[GameBoard::CellPosition(row, column)] = {GameBoard::CellPosition(row-(int)game.getGameBoard().rows, column), pair.second};
+                                gameBoardChange.gameBoardChange[GameBoard::CellPosition(row, column)] = {GameBoard::CellPosition(row-(int)game.getGameBoard().rows-(int)game.getGameBoard().columns+1+column, column), pair.second};
                             }
                         }
                         render(gameBoardChange,3);
