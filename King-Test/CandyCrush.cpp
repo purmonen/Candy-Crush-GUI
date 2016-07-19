@@ -14,7 +14,7 @@ void CandyCrush::clearAllMatches(GameBoardChangeCallback callback) {
 }
 
 bool CandyCrush::isLegalMove(GameBoard::CellSwapMove move) const {
-    // Perform the move on a copy of the game
+    // Perform the move on a copy of the game and returns whether it was valid or not
     auto game = *this;
     return game.performMove(move);
 }
@@ -46,31 +46,30 @@ bool CandyCrush::performMove(GameBoard::CellSwapMove move, GameBoardChangeCallba
     gameBoard.swapCells(move);
     gameBoardChange = CandyCrushGameBoardChange(*this);
     
-    // Horizontal matching
+    // Horizontal matching – look for 3 or more consecutive columns on the same row with the same color
     for (auto row = 0; row < gameBoard.rows; row++) {
         int numberOfMatches = 0;
         auto lastCell = gameBoard[row][0];
         for (auto column = 0; column < gameBoard.columns; column++) {
-            bool cellsMatched = lastCell == gameBoard[row][column];
+            auto currentCell = gameBoard[row][column];
+            bool cellsMatched = lastCell == currentCell;
             if (cellsMatched) {
                 numberOfMatches++;
             }
-            if ((!cellsMatched || column == gameBoard.rows -1 ) && numberOfMatches >= 3) {
+            
+            if (numberOfMatches >= 3 && (!cellsMatched || column == gameBoard.rows -1 )) {
                 score += scoreForMatches(numberOfMatches);
-                auto lastColumn = column;
-                if (cellsMatched) {
-                    lastColumn++;
-                }
+                auto lastColumnThatMatched = cellsMatched ? column : column-1;
                 
-                for (auto matchedColumn = lastColumn-numberOfMatches; matchedColumn < lastColumn; matchedColumn++) {
-                    gameBoardChange.removedCells.push_back({GameBoard::CellPosition(row, matchedColumn), gameBoard[row][matchedColumn]});
-                }
-                
-                for (auto matchedColumn = lastColumn-numberOfMatches; matchedColumn < lastColumn; matchedColumn++) {
+                for (auto matchedColumn = lastColumnThatMatched-numberOfMatches+1; matchedColumn <= lastColumnThatMatched; matchedColumn++) {
+                    gameBoardChange.removedCells.push_back({{row, matchedColumn}, gameBoard[row][matchedColumn]});
+                    
+                    // Move existing cells down
                     for (auto matchedRow = row-1; matchedRow >= 0; matchedRow--) {
-                        gameBoardChange.gameBoardChange[GameBoard::CellPosition(matchedRow+1, matchedColumn)] = {GameBoard::CellPosition(matchedRow, matchedColumn), gameBoard[GameBoard::CellPosition(matchedRow, matchedColumn)]};
+                        gameBoardChange.gameBoardChange[{matchedRow+1, matchedColumn}] = {{matchedRow, matchedColumn}, gameBoard[matchedRow][matchedColumn]};
                     }
-                    gameBoardChange.gameBoardChange[GameBoard::CellPosition(0, matchedColumn)] = {GameBoard::CellPosition(-1, matchedColumn), randomCell()};
+                    // Create new cell
+                    gameBoardChange.gameBoardChange[{0, matchedColumn}] = {{-1, matchedColumn}, randomCell()};
                 }
             }
             if (!cellsMatched) {
@@ -80,41 +79,33 @@ bool CandyCrush::performMove(GameBoard::CellSwapMove move, GameBoardChangeCallba
             lastCell = gameBoard[row][column];
         }
     }
-    // Vertical matching
+    // Vertical matching – look for 3 or more consecutive rows in same column with the same color
     for (auto column = 0; column < gameBoard.columns; column++) {
         int numberOfMatches = 0;
         auto lastCell = gameBoard[0][column];
         for (auto row = 0; row < gameBoard.rows; row++) {
-            bool cellsMatched = lastCell == gameBoard[row][column];
+            auto currentCell = gameBoard[row][column];
+            bool cellsMatched = lastCell == currentCell;
             if (cellsMatched) {
                 numberOfMatches++;
             }
-            if ((!cellsMatched || row == gameBoard.rows-1) && numberOfMatches >= 3) {
+            if (numberOfMatches >= 3 && (!cellsMatched || row == gameBoard.rows-1)) {
                 score += scoreForMatches(numberOfMatches);
-                int prevRow = row-numberOfMatches;
-                if (!cellsMatched) {
-                    prevRow--;
+                int firstPreviousRowNotMatching = cellsMatched ? row-numberOfMatches : row-numberOfMatches-1;
+                
+                for (auto i = firstPreviousRowNotMatching+1; i <= firstPreviousRowNotMatching+numberOfMatches; i++) {
+                    gameBoardChange.removedCells.push_back({{i, column}, gameBoard[i][column]});
                 }
                 
-                for (auto i = prevRow+1; i <= prevRow+numberOfMatches; i++) {
-                    gameBoardChange.removedCells.push_back({GameBoard::CellPosition(i, column), gameBoard[i][column]});
+                // Move down already existing cells
+                while (firstPreviousRowNotMatching >= 0) {
+                    gameBoardChange.gameBoardChange[{firstPreviousRowNotMatching+numberOfMatches, column}] = {{firstPreviousRowNotMatching, column}, gameBoard[firstPreviousRowNotMatching][column]};
+                    firstPreviousRowNotMatching--;
                 }
                 
-                while (prevRow >= 0) {
-                    gameBoardChange.gameBoardChange[GameBoard::CellPosition(prevRow+numberOfMatches, column)] = {GameBoard::CellPosition(prevRow, column), gameBoard[GameBoard::CellPosition(prevRow, column)]};
-                    prevRow--;
-                }
-                
+                // Add new cells at the top
                 for (auto i = 0; i < numberOfMatches; i++) {
-                    gameBoardChange.gameBoardChange[GameBoard::CellPosition(i, column)] = {GameBoard::CellPosition(i-numberOfMatches, column), randomCell()};
-                }
-                
-                int matchedRow = row;
-                if (!cellsMatched) {
-                    matchedRow--;
-                }
-                for (auto i = 0; i < numberOfMatches; i++) {
-                    matchedRow--;
+                    gameBoardChange.gameBoardChange[{i, column}] = {{i-numberOfMatches, column}, randomCell()};
                 }
             }
             
@@ -125,9 +116,10 @@ bool CandyCrush::performMove(GameBoard::CellSwapMove move, GameBoardChangeCallba
         }
     }
     
+    // Apply all changes to the actual game board now
     for (auto row = 0; row < gameBoard.rows; row++) {
         for (auto column = 0; column < gameBoard.columns; column++) {
-            gameBoard[row][column] = gameBoardChange.gameBoardChange[GameBoard::CellPosition(row, column)].second;
+            gameBoard[row][column] = gameBoardChange.gameBoardChange[{row, column}].second;
         }
     }
     
@@ -161,14 +153,9 @@ CandyCrush CandyCrush::gameForMove(GameBoard::CellSwapMove move) const {
 }
 
 CandyCrush::CandyCrush() {
+    // The randomized board may have matching cells already – must be removed!
     clearAllMatches();
     score = 0;
-//    gameBoard[0][1] = Purple;
-//    //gameBoard[1][1] = Purple;
-//    gameBoard[1][2] = Purple;
-//    gameBoard[1][3] = Purple;
-//    gameBoard[2][1] = Purple;
-//    gameBoard[3][1] = Purple;
 }
 
 const CandyCrush::CandyCrushGameBoard& CandyCrush::getGameBoard() const {

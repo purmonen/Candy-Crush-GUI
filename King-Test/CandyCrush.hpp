@@ -49,6 +49,7 @@ struct CandyCrushGameBoardChange {
     std::unordered_map<GameBoard::CellPosition, std::pair<GameBoard::CellPosition, CandyCrush::Cell>> gameBoardChange;
     std::vector<std::pair<GameBoard::CellPosition, CandyCrush::Cell>> removedCells;
     
+    // This initializes a game board change where nothing has been removed and all cells map to themselves, thus indicating that no changes has been done
     CandyCrushGameBoardChange(CandyCrush game) {
         for (auto row = 0; row < game.getGameBoard().rows; row++) {
             for (auto column = 0; column < game.getGameBoard().columns; column++) {
