@@ -263,6 +263,8 @@ struct GameEngine {
                 
                 if (e.type == SDL_MOUSEBUTTONDOWN){
                     if (firstGame || game.gameOver()) {
+                        lastX = -1;
+                        lastY = -1;
                         firstGame = false;
                         game = CandyCrush();
                         CandyCrushGameBoardChange gameBoardChange(game);
