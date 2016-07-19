@@ -276,7 +276,7 @@ struct GameEngine {
             
             
             SDL_RenderPresent(renderer);
-            SDL_Delay(5);
+            SDL_Delay(3);
             distance += distanceStep;
         }
         //        auto currentTime = std::chrono::high_resolution_clock::now();
@@ -378,7 +378,7 @@ struct GameEngine {
                     }
                 }
             }
-            SDL_Delay(3);
+            SDL_Delay(10);
         }
     }
 };
