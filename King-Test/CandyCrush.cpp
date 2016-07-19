@@ -41,6 +41,8 @@ int CandyCrush::scoreForMatches(int numberOfMatches) {
     return numberOfMatches + (numberOfMatches >= 4 ? 5 : 0);
 }
 
+
+
 bool CandyCrush::performMove(GameBoard::CellSwapMove move, GameBoardChangeCallback callback) {
     
     if (!gameBoard.areCellsAdjacent(move.from, move.to) && !(move.from == move.to)) {
@@ -87,16 +89,14 @@ bool CandyCrush::performMove(GameBoard::CellSwapMove move, GameBoardChangeCallba
                 for (auto matchedColumn = lastColumn-numberOfMatches; matchedColumn < lastColumn; matchedColumn++) {
                     for (auto matchedRow = row-1; matchedRow >= 0; matchedRow--) {
                         gameBoardChange.gameBoardChange[GameBoard::CellPosition(matchedRow+1, matchedColumn)] = {GameBoard::CellPosition(matchedRow, matchedColumn), gameBoard[GameBoard::CellPosition(matchedRow, matchedColumn)]};
-                        gameBoard[matchedRow+1][matchedColumn] = gameBoard[matchedRow][matchedColumn];
+                        //gameBoard[matchedRow+1][matchedColumn] = gameBoard[matchedRow][matchedColumn];
                     }
-                    gameBoard[0][matchedColumn] = randomCell();
-                    gameBoardChange.gameBoardChange[GameBoard::CellPosition(0, matchedColumn)] = {GameBoard::CellPosition(-1, matchedColumn), gameBoard[0][matchedColumn]};
+                    //gameBoard[0][matchedColumn] = randomCell();
+                    gameBoardChange.gameBoardChange[GameBoard::CellPosition(0, matchedColumn)] = {GameBoard::CellPosition(-1, matchedColumn), randomCell()};
                 }
                 
-                if (callback != nullptr) {
-                    callback(gameBoardChange);
-                }
-                gameBoardChange = CandyCrushGameBoardChange(*this);
+
+//                gameBoardChange = CandyCrushGameBoardChange(*this);
             }
             if (!cellsMatched) {
                 numberOfMatches = 1;
@@ -129,17 +129,16 @@ bool CandyCrush::performMove(GameBoard::CellSwapMove move, GameBoardChangeCallba
                     gameBoardChange.gameBoardChange[GameBoard::CellPosition(prevRow+numberOfMatches, column)] = {GameBoard::CellPosition(prevRow, column), gameBoard[GameBoard::CellPosition(prevRow, column)]};
                     
                     
-                    gameBoard[prevRow+numberOfMatches][column] = gameBoard[prevRow][column];
+                    //gameBoard[prevRow+numberOfMatches][column] = gameBoard[prevRow][column];
                     
                     prevRow--;
                 }
                 
                 for (auto i = 0; i < numberOfMatches; i++) {
+                    //gameBoard[i][column] = randomCell();
                     
-                    gameBoard[i][column] = randomCell();
+                    gameBoardChange.gameBoardChange[GameBoard::CellPosition(i, column)] = {GameBoard::CellPosition(i-numberOfMatches, column), randomCell()};
                     
-                    gameBoardChange.gameBoardChange[GameBoard::CellPosition(i, column)] = {GameBoard::CellPosition(i-numberOfMatches, column), gameBoard[i][column]};
-
                 }
                 
                 int matchedRow = row;
@@ -150,17 +149,27 @@ bool CandyCrush::performMove(GameBoard::CellSwapMove move, GameBoardChangeCallba
                     matchedRow--;
                 }
                 
-                if (callback != nullptr) {
-                    callback(gameBoardChange);
-                }
-                gameBoardChange = CandyCrushGameBoardChange(*this);
+
+//                gameBoardChange = CandyCrushGameBoardChange(*this);
             }
-        
+            
             if (!cellsMatched) {
                 numberOfMatches = 1;
             }
             lastCell = gameBoard[row][column];
         }
+    }
+    
+    for (auto row = 0; row < gameBoard.rows; row++) {
+        for (auto column = 0; column < gameBoard.columns; column++) {
+            gameBoard[row][column] = gameBoardChange.gameBoardChange[GameBoard::CellPosition(row, column)].second;
+        }
+    }
+    
+    
+    
+    if (callback != nullptr) {
+        callback(gameBoardChange);
     }
     
     if (oldGame.score == score) {
@@ -179,12 +188,13 @@ bool CandyCrush::performMove(GameBoard::CellSwapMove move, GameBoardChangeCallba
 CandyCrush::CandyCrush() {
     clearAllMatches();
     score = 0;
-//    gameBoard[0][1] = Purple;
-//    //gameBoard[1][1] = Purple;
-//    gameBoard[1][2] = Purple;
-//    gameBoard[1][3] = Purple;
-//    gameBoard[2][1] = Purple;
-//    gameBoard[2][2] = Purple;
+    1+1;
+    gameBoard[0][1] = Purple;
+    //gameBoard[1][1] = Purple;
+    gameBoard[1][2] = Purple;
+    gameBoard[1][3] = Purple;
+    gameBoard[2][1] = Purple;
+    gameBoard[3][1] = Purple;
 }
 
 const CandyCrush::CandyCrushGameBoard& CandyCrush::getGameBoard() const {

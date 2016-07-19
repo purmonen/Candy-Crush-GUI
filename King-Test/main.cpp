@@ -26,13 +26,13 @@ struct GameEngine {
     const int cellWidth = gameBoardRect.w / (int)game.getGameBoard().columns;
     
     SDL_Window* window = nullptr;
-    SDL_Renderer * renderer;
+    SDL_Renderer * renderer = nullptr;
     
     std::unordered_map<CandyCrush::Cell, SDL_Texture*> cellTextures;
     SDL_Texture* backgroundTexture = nullptr;
     
-    TTF_Font* scoreLabelFont;
-    TTF_Font* timeLeftLabelFont;
+    TTF_Font* scoreLabelFont = nullptr;
+    TTF_Font* timeLeftLabelFont = nullptr;
     
     
     GameEngine() {
@@ -91,7 +91,8 @@ struct GameEngine {
     }
     
     void renderText(std::string text, int x, int y) {
-        SDL_Surface* label = TTF_RenderText_Solid(scoreLabelFont, text.c_str(), {255, 255, 255});
+        SDL_Color whiteColor = {255, 255, 255};
+        SDL_Surface* label = TTF_RenderText_Solid(scoreLabelFont, text.c_str(), whiteColor);
         auto labelRect = SDL_Rect{x, y, label->w,label->h};
         SDL_Texture* labelTexture = SDL_CreateTextureFromSurface( renderer, label );
         SDL_RenderCopy(renderer, labelTexture, NULL, &labelRect);
@@ -106,105 +107,100 @@ struct GameEngine {
         SDL_RenderCopy(renderer, backgroundTexture, NULL, NULL);
     }
     
+    void renderGameOver() {
+        bool isCellVisible[game.getGameBoard().rows][game.getGameBoard().columns];
+        for (auto row = 0; row < game.getGameBoard().rows; row++) {
+            for (auto column = 0; column < game.getGameBoard().columns; column++) {
+                isCellVisible[row][column] = true;
+            }
+        }
+        
+        // Animates hiding of the selected cell and hides all previously hidden cells
+        auto renderSpiral = [&](int selectedRow, int selectedColumn) {
+            for (int distance = 0; distance < cellWidth; distance += 4) {
+                SDL_RenderClear(renderer);
+                SDL_RenderCopy(renderer, backgroundTexture, NULL, NULL);
+                for (auto row = 0; row < game.getGameBoard().rows; row++) {
+                    for (auto column = 0; column < game.getGameBoard().columns; column++) {
+                        auto cell = game.getGameBoard()[row][column];
+                        auto image = cellTextures[cell];
+                        auto fromDestination = rectForCellPosition(GameBoard::CellPosition(row, column), image);
+                        if (row == selectedRow && column == selectedColumn) {
+                            fromDestination.x += distance/2;
+                            fromDestination.y += distance/2;
+                            fromDestination.w -= distance;
+                            fromDestination.h -= distance;
+                            isCellVisible[row][column] = false;
+                            SDL_RenderCopy(renderer, image, nullptr, &fromDestination);
+                        } else if (isCellVisible[row][column]) {
+                            SDL_RenderCopy(renderer, image, nullptr, &fromDestination);
+                        }
+                        
+                    }
+                }
+                SDL_RenderPresent(renderer);
+                //                    SDL_Delay(50);
+                
+            }
+        };
+        
+        // Spiral iteration over game board :)
+        int depth = 0;
+        while (depth <= game.getGameBoard().columns/2) {
+            int topRow = depth;
+            for (auto selectedColumn = depth; selectedColumn < game.getGameBoard().columns-depth; selectedColumn++) {
+                renderSpiral(topRow, selectedColumn);
+            }
+            
+            int rightColumn = (int)game.getGameBoard().columns-1-depth;
+            for (int selectedRow = depth+1; selectedRow < game.getGameBoard().rows-1-depth; selectedRow++) {
+                renderSpiral(selectedRow, rightColumn);
+            }
+            
+            
+            int bottomRow = (int)game.getGameBoard().rows - depth - 1;
+            if (topRow != bottomRow) {
+                for (int selectedColumn = (int)game.getGameBoard().columns-1-depth; selectedColumn >= depth; selectedColumn--) {
+                    renderSpiral(bottomRow, selectedColumn);
+                }
+            }
+            
+            int leftColumn = depth;
+            if (leftColumn != rightColumn) {
+                for (int selectedRow = (int)game.getGameBoard().rows-2-depth; selectedRow >= depth+1; selectedRow--) {
+                    renderSpiral(selectedRow, leftColumn);
+                }
+            }
+            depth++;
+        }
+        
+        SDL_Delay(200);
+        
+        renderBackground();
+        renderText("GAME OVER", 390, 250);
+        renderScore();
+    }
+    
     void render(CandyCrushGameBoardChange& gameBoardChange, int move = 1) {
         auto startTime = std::chrono::high_resolution_clock::now();
         auto finishedRendering = false;
         auto distance = 0;
-        
-//        SDL_Color White = {255, 255, 255};
-        
+
         if (firstGame) {
             renderBackground();
             renderText("Click to start", 360, 250);
             SDL_RenderPresent(renderer);
         } else if (game.gameOver()) {
-            
-            bool isCellVisible[game.getGameBoard().rows][game.getGameBoard().columns];
-            for (auto row = 0; row < game.getGameBoard().rows; row++) {
-                for (auto column = 0; column < game.getGameBoard().columns; column++) {
-                    isCellVisible[row][column] = true;
-                }
-            }
-            
-            auto renderSpiral = [&](int selectedRow, int selectedColumn) {
-                for (int distance = 0; distance < cellWidth; distance += 4) {
-                    SDL_RenderClear(renderer);
-                    SDL_RenderCopy(renderer, backgroundTexture, NULL, NULL);
-                    for (auto row = 0; row < game.getGameBoard().rows; row++) {
-                        for (auto column = 0; column < game.getGameBoard().columns; column++) {
-                            auto removedCell = gameBoardChange.gameBoardChange[GameBoard::CellPosition(row, column)];
-                            auto image = cellTextures[removedCell.second];
-                            auto fromDestination = rectForCellPosition(removedCell.first, image);
-                            if (row == selectedRow && column == selectedColumn) {
-                                fromDestination.x += distance/2;
-                                fromDestination.y += distance/2;
-                                fromDestination.w -= distance;
-                                fromDestination.h -= distance;
-                                isCellVisible[row][column] = false;
-                                SDL_RenderCopy(renderer, image, nullptr, &fromDestination);
-                            } else if (isCellVisible[row][column]) {
-                                SDL_RenderCopy(renderer, image, nullptr, &fromDestination);
-                            }
-                            
-                        }
-                    }
-                    SDL_RenderPresent(renderer);
-                    //                    SDL_Delay(50);
-                    
-                }
-            };
-            
-            
-            int depth = 0;
-            while (depth <= game.getGameBoard().columns/2) {
-                int topRow = depth;
-                for (auto selectedColumn = depth; selectedColumn < game.getGameBoard().columns-depth; selectedColumn++) {
-                    renderSpiral(topRow, selectedColumn);
-                }
-                
-                int rightColumn = (int)game.getGameBoard().columns-1-depth;
-                for (int selectedRow = depth+1; selectedRow < game.getGameBoard().rows-1-depth; selectedRow++) {
-                    renderSpiral(selectedRow, rightColumn);
-                }
-                
-                
-                int bottomRow = (int)game.getGameBoard().rows - depth - 1;
-                if (topRow != bottomRow) {
-                    for (int selectedColumn = (int)game.getGameBoard().columns-1-depth; selectedColumn >= depth; selectedColumn--) {
-                        renderSpiral(bottomRow, selectedColumn);
-                    }
-                }
-                
-                int leftColumn = depth;
-                if (leftColumn != rightColumn) {
-                    for (int selectedRow = (int)game.getGameBoard().rows-2-depth; selectedRow >= depth+1; selectedRow--) {
-                        renderSpiral(selectedRow, leftColumn);
-                    }
-                }
-                depth++;
-            }
-            
-            SDL_Delay(200);
-            
-            renderBackground();
-            renderText("GAME OVER", 390, 250);
-            renderScore();
+            renderGameOver();
             SDL_RenderPresent(renderer);
-            
         } else {
             while (!finishedRendering){
                 finishedRendering = true;
                 SDL_RenderClear(renderer);
                 
-                // Render background image
                 renderBackground();
-                
-                // Render score label
                 renderScore();
-                
-                // Render time left label
                 renderText(std::to_string(game.numberOfSecondsLeft()), 80, 430);
-                
                 
                 // Render rectangle around selected cell
                 auto selectedCell = cellPositionFromCoordinates(lastMouseDownX, lastMouseDownY);
@@ -213,7 +209,6 @@ struct GameEngine {
                     SDL_SetRenderDrawColor(renderer, 255, 80, 80, 1);
                     SDL_RenderDrawRect(renderer, &selectedCellRect);
                 }
-                
                 
                 for (auto removedCell: gameBoardChange.removedCells) {
                     auto image = cellTextures[removedCell.second];
@@ -256,7 +251,6 @@ struct GameEngine {
                         if (fromDestination.x != toDestination.x || fromDestination.y != toDestination.y) {
                             finishedRendering = false;
                         }
-                        
                         
                         auto animatedgameBoardRect = gameBoardRect.y-18;
                         
