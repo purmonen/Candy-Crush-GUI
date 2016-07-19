@@ -82,10 +82,10 @@
 				267ACDD31D3D242F00E758FD /* CandyCrush.cpp */,
 				267ACDD41D3D242F00E758FD /* CandyCrush.hpp */,
 				267ACDD51D3D242F00E758FD /* GameBoard.cpp */,
-				2619C6691D3E74A200D0B721 /* assets */,
 				267ACDD61D3D242F00E758FD /* GameBoard.hpp */,
 				267ACDD71D3D242F00E758FD /* main.cpp */,
 				2619C6681D3E731500D0B721 /* README */,
+				2619C6691D3E74A200D0B721 /* assets */,
 			);
 			path = "King-Test";
 			sourceTree = "<group>";

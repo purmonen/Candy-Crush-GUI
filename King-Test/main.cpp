@@ -294,17 +294,27 @@ struct GameEngine {
         bool quit = false;
         bool isMouseDown = false;
         SDL_Event e;
-        
+      
         auto renderCallback = [&](CandyCrushGameBoardChange gameBoardChange) {
             render(gameBoardChange);
         };
-        auto numberOfSecondsLeft = -1;
+//    auto numberOfSecondsLeft = -1;
+        
+        
+        bool hasShownGameOver = false;
+        
         while( !quit ) {
             
-            if (game.numberOfSecondsLeft() != numberOfSecondsLeft) {
-                numberOfSecondsLeft = game.numberOfSecondsLeft();
+//            if (game.numberOfSecondsLeft() != numberOfSecondsLeft) {
+//                numberOfSecondsLeft = game.numberOfSecondsLeft();
+            
+            
+            if (!hasShownGameOver) {
+                if (game.gameOver()) {
+                    hasShownGameOver = true;
+                }
                 auto gameBoardChange = CandyCrushGameBoardChange(game);
-                render(gameBoardChange, 3);
+                render(gameBoardChange);
             }
             
             while( SDL_PollEvent( &e ) != 0 ) {
@@ -319,6 +329,7 @@ struct GameEngine {
                         lastMouseDownY = -1;
                         isFirstGame = false;
                         game = CandyCrush();
+                        hasShownGameOver = false;
                         
                         // Intro animation - all cells falls from the top in a triangular fashion
                         CandyCrushGameBoardChange gameBoardChange(game);
@@ -359,7 +370,7 @@ struct GameEngine {
                 }
                 
                 // Handle drag event
-                if (e.type == SDL_MOUSEMOTION && isMouseDown) {
+                if (e.type == SDL_MOUSEMOTION && isMouseDown && !game.gameOver()) {
                     int x, y;
                     SDL_GetMouseState(&x, &y);
                     auto move = GameBoard::CellSwapMove(cellPositionFromCoordinates(x, y), cellPositionFromCoordinates(lastMouseDownX, lastMouseDownY));

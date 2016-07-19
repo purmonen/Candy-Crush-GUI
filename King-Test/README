@@ -1,0 +1,11 @@
+I have developed the program and compiled the executable in Xcode. I assume that the executable can be run on a Mac that has the SDL2, SDL2_image and SDL2_ttf frameworks installed.
+
+
+# Architecture
+The game is divided into two parts, game logic and user interface. This makes it easy to make many different kinds of user interfaces such as text based or graphical user interfaces without needing to change the game logic.
+
+The game logic is contained within the CandyCrush class which provides an interface for making moves and seeing the current board state. The only way to modify the game state from the users perspective is through the play method which is the only non-const method. This makes it hard for the user to misuse the game or accidently put the game in a bad state. An optional callback can be passed to the play method in order to receive information about game board changes which are needed when making animations. The callback will be called multiple times by the play when the game board changes. Game board changes are wrapped in the CandyCrushGameBoardChange class which includes information about cells that have been removed and also for each cell position, from what cell position the cell being there next came from and what cell value it has. Methods that return all legal moves and the next game state for moves can be used when building AI that plays the game.
+
+The game board is represented by the GameBoard class which wraps a matrix array and provides methods for conveniently finding adjacent cells and swapping content of cells.
+
+The user interface is contained in the GameEngine class located in main.cpp built on SDL2 (Simple DirectMedia Library). It also uses the extension libraries SDL2_image and SDL2_ttf. It listens to events and draws to the display.

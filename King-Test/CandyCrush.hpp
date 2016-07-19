@@ -29,11 +29,12 @@ private:
     void clearAllMatches(GameBoardChangeCallback callback = nullptr);
     std::chrono::time_point<std::chrono::high_resolution_clock> startTime = std::chrono::high_resolution_clock::now();
     
-    int scoreForMatches(int numberOfMatches);
+    int scoreForMatches(int numberOfMatches) const;
     bool performMove(GameBoard::CellSwapMove move, GameBoardChangeCallback callback = nullptr);
 public:
     CandyCrush();
     const CandyCrushGameBoard& getGameBoard() const;
+    CandyCrush gameForMove(GameBoard::CellSwapMove) const;
     bool isLegalMove(GameBoard::CellSwapMove move) const;
     bool operator==(const CandyCrush & game) const;
     int getScore() const;

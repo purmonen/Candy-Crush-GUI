@@ -20,7 +20,7 @@ bool CandyCrush::isLegalMove(GameBoard::CellSwapMove move) const {
 }
 
 // Could have a more advanced score function where many matches are much more rewarded
-int CandyCrush::scoreForMatches(int numberOfMatches) {
+int CandyCrush::scoreForMatches(int numberOfMatches) const {
     return numberOfMatches;
 }
 
@@ -151,6 +151,13 @@ bool CandyCrush::performMove(GameBoard::CellSwapMove move, GameBoardChangeCallba
     }
     return true;
     
+}
+
+// Return the game state that will occur after a move has been made
+CandyCrush CandyCrush::gameForMove(GameBoard::CellSwapMove move) const {
+    auto gameCopy = *this;
+    gameCopy.performMove(move);
+    return gameCopy;
 }
 
 CandyCrush::CandyCrush() {
