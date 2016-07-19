@@ -12,8 +12,9 @@
 struct GameEngine {
     CandyCrush game;
     
-    bool firstGame = true;
+    bool isFirstGame = true;
     
+    // The area of the window where the game board is displayed
     const SDL_Rect gameBoardRect = SDL_Rect{340,110,320,320};
     
     int lastMouseDownX = -1;
@@ -90,6 +91,7 @@ struct GameEngine {
         return SDL_Rect{cellWidth*cellPosition.column+cellWidth/2-w/2 + gameBoardRect.x, cellHeight*cellPosition.row+cellHeight/2-h/2+gameBoardRect.y, w, h};
     }
     
+    
     void renderText(std::string text, int x, int y) {
         SDL_Color whiteColor = {255, 255, 255};
         SDL_Surface* label = TTF_RenderText_Solid(scoreLabelFont, text.c_str(), whiteColor);
@@ -99,15 +101,20 @@ struct GameEngine {
         SDL_DestroyTexture(labelTexture);
     }
     
+    
     void renderScore() {
         renderText("Score: " + std::to_string(game.getScore()), 20, 20);
     }
+    
     
     void renderBackground() {
         SDL_RenderCopy(renderer, backgroundTexture, NULL, NULL);
     }
     
+    
     void renderGameOver() {
+        
+        // All cells will be hidden one by one in a spiral fashion
         bool isCellVisible[game.getGameBoard().rows][game.getGameBoard().columns];
         for (auto row = 0; row < game.getGameBoard().rows; row++) {
             for (auto column = 0; column < game.getGameBoard().columns; column++) {
@@ -186,7 +193,7 @@ struct GameEngine {
         auto finishedRendering = false;
         auto distance = 0;
 
-        if (firstGame) {
+        if (isFirstGame) {
             renderBackground();
             renderText("Click to start", 360, 250);
             SDL_RenderPresent(renderer);
@@ -305,12 +312,15 @@ struct GameEngine {
                     quit = true;
                 }
                 
+                // Handle clicks
                 if (e.type == SDL_MOUSEBUTTONDOWN){
-                    if (firstGame || game.gameOver()) {
+                    if (isFirstGame || game.gameOver()) {
                         lastMouseDownX = -1;
                         lastMouseDownY = -1;
-                        firstGame = false;
+                        isFirstGame = false;
                         game = CandyCrush();
+                        
+                        // Intro animation - all cells falls from the top in a triangular fashion
                         CandyCrushGameBoardChange gameBoardChange(game);
                         for (auto row = 0; row < game.getGameBoard().rows; row++) {
                             for (auto column = 0; column < game.getGameBoard().columns; column++) {
@@ -318,6 +328,7 @@ struct GameEngine {
                                 gameBoardChange.gameBoardChange[GameBoard::CellPosition(row, column)] = {GameBoard::CellPosition(row-(int)game.getGameBoard().rows-(int)game.getGameBoard().columns+1+column, column), pair.second};
                             }
                         }
+                        
                         render(gameBoardChange,3);
                     } else {
                         isMouseDown = true;
@@ -347,6 +358,7 @@ struct GameEngine {
                     isMouseDown = false;
                 }
                 
+                // Handle drag event
                 if (e.type == SDL_MOUSEMOTION && isMouseDown) {
                     int x, y;
                     SDL_GetMouseState(&x, &y);
@@ -359,7 +371,6 @@ struct GameEngine {
                         render(gameBoardChange);
                     }
                 }
-                
             }
             SDL_Delay(1);
         }

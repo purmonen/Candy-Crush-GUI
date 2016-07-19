@@ -10,8 +10,6 @@
 
 struct CandyCrushGameBoardChange;
 
-
-
 class CandyCrush {
 public:
     enum Cell {Green, Blue, Purple, Red, Yellow};
@@ -25,7 +23,7 @@ private:
         return cells[rand() % cells.size()];
     });
     
-    int timeLimitInSeconds = 1500;
+    int timeLimitInSeconds = 20;
     
     
     int score = 0;
@@ -63,8 +61,6 @@ struct CandyCrushGameBoardChange {
             }
         }
     }
-    
-    
 };
 
 std::ostream& operator<<(std::ostream& os, const CandyCrush& game);

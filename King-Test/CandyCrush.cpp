@@ -7,59 +7,40 @@ CandyCrush::Cell CandyCrush::randomCell() {
 
 // When randomly generating new cells some of them will create matches that must be cleared after each move and when initializing the game
 void CandyCrush::clearAllMatches(GameBoardChangeCallback callback) {
-    while (true) {
-        auto oldScore = score;
-        performMove(GameBoard::CellSwapMove(GameBoard::CellPosition(0,0), GameBoard::CellPosition(0,0)), callback);
-        if (oldScore == score) {
-            break;
-        }
-    }
+    
+    // As long as doing nothing increases score we should keep doing it
+    auto doNothingMove = GameBoard::CellSwapMove(GameBoard::CellPosition(0,0), GameBoard::CellPosition(0,0));
+    while (performMove(doNothingMove, callback)) {}
 }
 
 bool CandyCrush::isLegalMove(GameBoard::CellSwapMove move) const {
-    
-    if (!gameBoard.isCellValid(move.from) || !gameBoard.isCellValid(move.to)) {
-        return false;
-    }
-    
-    auto adjacentCells = {move.from.cellAtDirection(GameBoard::Up), move.from.cellAtDirection(GameBoard::Right), move.from.cellAtDirection(GameBoard::Down), move.from.cellAtDirection(GameBoard::Left)};
-    
-    if (std::find(adjacentCells.begin(), adjacentCells.end(), move.to) == adjacentCells.end()) {
-        return false;
-    }
-    
-    
     // Perform the move on a copy of the game
     auto game = *this;
-    game.performMove(move);
-    
-    // All legal moves increases score!
-    return game.score != score;
+    return game.performMove(move);
 }
 
+// Could have a more advanced score function where many matches are much more rewarded
 int CandyCrush::scoreForMatches(int numberOfMatches) {
-    return numberOfMatches + (numberOfMatches >= 4 ? 5 : 0);
+    return numberOfMatches;
 }
 
-
-
+// Performs the move and returns where it was valid
 bool CandyCrush::performMove(GameBoard::CellSwapMove move, GameBoardChangeCallback callback) {
-    
     if (!gameBoard.areCellsAdjacent(move.from, move.to) && !(move.from == move.to)) {
         return false;
     }
-    
-    
     
     auto gameBoardChange = CandyCrushGameBoardChange(*this);
     gameBoardChange.gameBoardChange[move.from] = {move.to, gameBoard[move.to]};
     gameBoardChange.gameBoardChange[move.to] = {move.from, gameBoard[move.from]};
     
+    // This allows the caller to see the game board changes done so far, which currently is just a swap
     if (callback != nullptr) {
         callback(gameBoardChange);
     }
     
-    auto oldGame = *this;
+    // Needed to calculate if the score did increase at the end
+    const auto oldScore = score;
     
     // Move pieces
     gameBoard.swapCells(move);
@@ -81,7 +62,6 @@ bool CandyCrush::performMove(GameBoard::CellSwapMove move, GameBoardChangeCallba
                     lastColumn++;
                 }
                 
-                
                 for (auto matchedColumn = lastColumn-numberOfMatches; matchedColumn < lastColumn; matchedColumn++) {
                     gameBoardChange.removedCells.push_back({GameBoard::CellPosition(row, matchedColumn), gameBoard[row][matchedColumn]});
                 }
@@ -89,14 +69,9 @@ bool CandyCrush::performMove(GameBoard::CellSwapMove move, GameBoardChangeCallba
                 for (auto matchedColumn = lastColumn-numberOfMatches; matchedColumn < lastColumn; matchedColumn++) {
                     for (auto matchedRow = row-1; matchedRow >= 0; matchedRow--) {
                         gameBoardChange.gameBoardChange[GameBoard::CellPosition(matchedRow+1, matchedColumn)] = {GameBoard::CellPosition(matchedRow, matchedColumn), gameBoard[GameBoard::CellPosition(matchedRow, matchedColumn)]};
-                        //gameBoard[matchedRow+1][matchedColumn] = gameBoard[matchedRow][matchedColumn];
                     }
-                    //gameBoard[0][matchedColumn] = randomCell();
                     gameBoardChange.gameBoardChange[GameBoard::CellPosition(0, matchedColumn)] = {GameBoard::CellPosition(-1, matchedColumn), randomCell()};
                 }
-                
-
-//                gameBoardChange = CandyCrushGameBoardChange(*this);
             }
             if (!cellsMatched) {
                 numberOfMatches = 1;
@@ -127,18 +102,11 @@ bool CandyCrush::performMove(GameBoard::CellSwapMove move, GameBoardChangeCallba
                 
                 while (prevRow >= 0) {
                     gameBoardChange.gameBoardChange[GameBoard::CellPosition(prevRow+numberOfMatches, column)] = {GameBoard::CellPosition(prevRow, column), gameBoard[GameBoard::CellPosition(prevRow, column)]};
-                    
-                    
-                    //gameBoard[prevRow+numberOfMatches][column] = gameBoard[prevRow][column];
-                    
                     prevRow--;
                 }
                 
                 for (auto i = 0; i < numberOfMatches; i++) {
-                    //gameBoard[i][column] = randomCell();
-                    
                     gameBoardChange.gameBoardChange[GameBoard::CellPosition(i, column)] = {GameBoard::CellPosition(i-numberOfMatches, column), randomCell()};
-                    
                 }
                 
                 int matchedRow = row;
@@ -148,9 +116,6 @@ bool CandyCrush::performMove(GameBoard::CellSwapMove move, GameBoardChangeCallba
                 for (auto i = 0; i < numberOfMatches; i++) {
                     matchedRow--;
                 }
-                
-
-//                gameBoardChange = CandyCrushGameBoardChange(*this);
             }
             
             if (!cellsMatched) {
@@ -166,19 +131,22 @@ bool CandyCrush::performMove(GameBoard::CellSwapMove move, GameBoardChangeCallba
         }
     }
     
-    
-    
+    // Let the caller see game board after changes
     if (callback != nullptr) {
         callback(gameBoardChange);
     }
     
-    if (oldGame.score == score) {
+    if (oldScore == score) {
+        
+        // If the move did not increase the score, it's not valid and the swap must be undone!
         gameBoardChange.gameBoardChange[move.from] = {move.to, gameBoard[move.to]};
         gameBoardChange.gameBoardChange[move.to] = {move.from, gameBoard[move.from]};
+        
+        // Let the caller see the swap back
         if (callback != nullptr) {
             callback(gameBoardChange);
         }
-        *this = oldGame;
+        gameBoard.swapCells(move);
         return false;
     }
     return true;
@@ -188,13 +156,12 @@ bool CandyCrush::performMove(GameBoard::CellSwapMove move, GameBoardChangeCallba
 CandyCrush::CandyCrush() {
     clearAllMatches();
     score = 0;
-    1+1;
-    gameBoard[0][1] = Purple;
-    //gameBoard[1][1] = Purple;
-    gameBoard[1][2] = Purple;
-    gameBoard[1][3] = Purple;
-    gameBoard[2][1] = Purple;
-    gameBoard[3][1] = Purple;
+//    gameBoard[0][1] = Purple;
+//    //gameBoard[1][1] = Purple;
+//    gameBoard[1][2] = Purple;
+//    gameBoard[1][3] = Purple;
+//    gameBoard[2][1] = Purple;
+//    gameBoard[3][1] = Purple;
 }
 
 const CandyCrush::CandyCrushGameBoard& CandyCrush::getGameBoard() const {
@@ -211,14 +178,16 @@ int CandyCrush::getScore() const {
 
 bool CandyCrush::play(GameBoard::CellSwapMove move, GameBoardChangeCallback callback) {
     if (!gameOver()) {
-        auto validMove = performMove(move, callback);
+        auto isMoveValid = performMove(move, callback);
         clearAllMatches(callback);
-        return validMove;
+        return isMoveValid;
     }
     return false;
 }
 
 bool CandyCrush::gameOver() const {
+    
+    // Legal moves can theoretically be empty since new cells are completely randomly generated
     return numberOfSecondsLeft() <= 0 || legalMoves().empty();
 }
 
@@ -265,6 +234,5 @@ std::ostream& operator<<(std::ostream& os, const CandyCrush& game) {
         os << std::endl;
     }
     std::cout << std::endl;
-    
     return os;
 }

@@ -28,6 +28,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		2619C6681D3E731500D0B721 /* README */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README; sourceTree = "<group>"; };
 		267ACDC91D3D23FB00E758FD /* King-Test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "King-Test"; sourceTree = BUILT_PRODUCTS_DIR; };
 		267ACDD31D3D242F00E758FD /* CandyCrush.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CandyCrush.cpp; sourceTree = "<group>"; };
 		267ACDD41D3D242F00E758FD /* CandyCrush.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = CandyCrush.hpp; sourceTree = "<group>"; };
@@ -80,6 +81,7 @@
 				267ACDD51D3D242F00E758FD /* GameBoard.cpp */,
 				267ACDD61D3D242F00E758FD /* GameBoard.hpp */,
 				267ACDD71D3D242F00E758FD /* main.cpp */,
+				2619C6681D3E731500D0B721 /* README */,
 			);
 			path = "King-Test";
 			sourceTree = "<group>";
@@ -271,6 +273,7 @@
 				267ACDD21D3D23FB00E758FD /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
