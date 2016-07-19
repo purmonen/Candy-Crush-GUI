@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2619C66A1D3E786800D0B721 /* assets in CopyFiles */ = {isa = PBXBuildFile; fileRef = 2619C6691D3E74A200D0B721 /* assets */; };
 		267ACDD81D3D242F00E758FD /* CandyCrush.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 267ACDD31D3D242F00E758FD /* CandyCrush.cpp */; };
 		267ACDD91D3D242F00E758FD /* GameBoard.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 267ACDD51D3D242F00E758FD /* GameBoard.cpp */; };
 		267ACDDA1D3D242F00E758FD /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 267ACDD71D3D242F00E758FD /* main.cpp */; };
@@ -18,17 +19,19 @@
 /* Begin PBXCopyFilesBuildPhase section */
 		267ACDC71D3D23FB00E758FD /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = /usr/share/man/man1/;
-			dstSubfolderSpec = 0;
+			buildActionMask = 12;
+			dstPath = "";
+			dstSubfolderSpec = 16;
 			files = (
+				2619C66A1D3E786800D0B721 /* assets in CopyFiles */,
 			);
-			runOnlyForDeploymentPostprocessing = 1;
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		2619C6681D3E731500D0B721 /* README */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README; sourceTree = "<group>"; };
+		2619C6691D3E74A200D0B721 /* assets */ = {isa = PBXFileReference; lastKnownFileType = folder; path = assets; sourceTree = "<group>"; };
 		267ACDC91D3D23FB00E758FD /* King-Test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "King-Test"; sourceTree = BUILT_PRODUCTS_DIR; };
 		267ACDD31D3D242F00E758FD /* CandyCrush.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CandyCrush.cpp; sourceTree = "<group>"; };
 		267ACDD41D3D242F00E758FD /* CandyCrush.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = CandyCrush.hpp; sourceTree = "<group>"; };
@@ -79,6 +82,7 @@
 				267ACDD31D3D242F00E758FD /* CandyCrush.cpp */,
 				267ACDD41D3D242F00E758FD /* CandyCrush.hpp */,
 				267ACDD51D3D242F00E758FD /* GameBoard.cpp */,
+				2619C6691D3E74A200D0B721 /* assets */,
 				267ACDD61D3D242F00E758FD /* GameBoard.hpp */,
 				267ACDD71D3D242F00E758FD /* main.cpp */,
 				2619C6681D3E731500D0B721 /* README */,

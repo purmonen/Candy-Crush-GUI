@@ -17,18 +17,17 @@ public:
     typedef std::function<void(CandyCrushGameBoardChange)> GameBoardChangeCallback;
     
 private:
-//    int numberOfMovesLeft = 100;
+    // Creates randomized game board
     CandyCrushGameBoard gameBoard = CandyCrushGameBoard([](auto rows, auto columns) {
         std::vector<CandyCrush::Cell> cells = {Green, Blue, Purple, Red, Yellow};
         return cells[rand() % cells.size()];
     });
     
     int timeLimitInSeconds = 20;
-    
-    
     int score = 0;
     Cell randomCell();
     void clearAllMatches(GameBoardChangeCallback callback = nullptr);
+    std::chrono::time_point<std::chrono::high_resolution_clock> startTime = std::chrono::high_resolution_clock::now();
     
     int scoreForMatches(int numberOfMatches);
     bool performMove(GameBoard::CellSwapMove move, GameBoardChangeCallback callback = nullptr);
@@ -38,16 +37,11 @@ public:
     bool isLegalMove(GameBoard::CellSwapMove move) const;
     bool operator==(const CandyCrush & game) const;
     int getScore() const;
-    int getNumberOfMovesLeft() const;
     int numberOfSecondsLeft() const;
     bool play(GameBoard::CellSwapMove move, GameBoardChangeCallback callback = nullptr);
     bool gameOver() const;
     std::vector<GameBoard::CellSwapMove> legalMoves() const;
-    
-    std::chrono::time_point<std::chrono::high_resolution_clock> startTime = std::chrono::high_resolution_clock::now();
-    
 };
-
 
 
 struct CandyCrushGameBoardChange {
