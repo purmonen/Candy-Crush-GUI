@@ -90,22 +90,32 @@ struct GameEngine {
         return SDL_Rect{cellWidth*cellPosition.column+cellWidth/2-w/2 + gameBoardRect.x, cellHeight*cellPosition.row+cellHeight/2-h/2+gameBoardRect.y, w, h};
     }
     
+    void renderText(std::string text, int x, int y) {
+        SDL_Surface* label = TTF_RenderText_Solid(scoreLabelFont, text.c_str(), {255, 255, 255});
+        auto labelRect = SDL_Rect{x, y, label->w,label->h};
+        SDL_Texture* labelTexture = SDL_CreateTextureFromSurface( renderer, label );
+        SDL_RenderCopy(renderer, labelTexture, NULL, &labelRect);
+        SDL_DestroyTexture(labelTexture);
+    }
+    
+    void renderScore() {
+        renderText("Score: " + std::to_string(game.getScore()), 20, 20);
+    }
+    
+    void renderBackground() {
+        SDL_RenderCopy(renderer, backgroundTexture, NULL, NULL);
+    }
     
     void render(CandyCrushGameBoardChange& gameBoardChange, int move = 1) {
         auto startTime = std::chrono::high_resolution_clock::now();
         auto finishedRendering = false;
         auto distance = 0;
         
-        SDL_Color White = {255, 255, 255};
+//        SDL_Color White = {255, 255, 255};
         
         if (firstGame) {
-            SDL_RenderCopy(renderer, backgroundTexture, NULL, NULL);
-            std::string timeLeftText = "Click to start";
-            SDL_Surface* timeLeftLabel = TTF_RenderText_Solid(scoreLabelFont, timeLeftText.c_str(), White);
-            auto timeLeftLabelRect = SDL_Rect{360, 250,timeLeftLabel->w,timeLeftLabel->h};
-            SDL_Texture* timeLeftTexture = SDL_CreateTextureFromSurface( renderer, timeLeftLabel );
-            SDL_RenderCopy(renderer, timeLeftTexture, NULL, &timeLeftLabelRect);
-            SDL_DestroyTexture(timeLeftTexture);
+            renderBackground();
+            renderText("Click to start", 360, 250);
             SDL_RenderPresent(renderer);
         } else if (game.gameOver()) {
             
@@ -176,23 +186,9 @@ struct GameEngine {
             
             SDL_Delay(200);
             
-            
-            SDL_RenderCopy(renderer, backgroundTexture, NULL, NULL);
-            std::string timeLeftText = "GAME OVER";
-            SDL_Surface* timeLeftLabel = TTF_RenderText_Solid(scoreLabelFont, timeLeftText.c_str(), White);
-            auto timeLeftLabelRect = SDL_Rect{390,250,timeLeftLabel->w,timeLeftLabel->h};
-            SDL_Texture* timeLeftTexture = SDL_CreateTextureFromSurface( renderer, timeLeftLabel );
-            SDL_RenderCopy(renderer, timeLeftTexture, NULL, &timeLeftLabelRect);
-            SDL_DestroyTexture(timeLeftTexture);
-            
-            
-            
-            auto scoreText = "Score: " + std::to_string(game.getScore());
-            SDL_Surface* scoreLabel = TTF_RenderText_Solid(scoreLabelFont, scoreText.c_str(), White);
-            SDL_Texture* scoreLabelTexture = SDL_CreateTextureFromSurface( renderer, scoreLabel );
-            auto scoreLabelRect = SDL_Rect{20,20,scoreLabel->w,scoreLabel->h};
-            SDL_RenderCopy(renderer, scoreLabelTexture, NULL, &scoreLabelRect);
-            SDL_DestroyTexture(scoreLabelTexture);
+            renderBackground();
+            renderText("GAME OVER", 390, 250);
+            renderScore();
             SDL_RenderPresent(renderer);
             
         } else {
@@ -201,26 +197,13 @@ struct GameEngine {
                 SDL_RenderClear(renderer);
                 
                 // Render background image
-                SDL_RenderCopy(renderer, backgroundTexture, NULL, NULL);
-                
-                
+                renderBackground();
                 
                 // Render score label
-                auto scoreText = "Score: " + std::to_string(game.getScore());
-                SDL_Surface* scoreLabel = TTF_RenderText_Solid(scoreLabelFont, scoreText.c_str(), White);
-                SDL_Texture* scoreLabelTexture = SDL_CreateTextureFromSurface( renderer, scoreLabel );
-                auto scoreLabelRect = SDL_Rect{20,20,scoreLabel->w,scoreLabel->h};
-                SDL_RenderCopy(renderer, scoreLabelTexture, NULL, &scoreLabelRect);
-                SDL_DestroyTexture(scoreLabelTexture);
+                renderScore();
                 
                 // Render time left label
-                auto timeLeftText = std::to_string(game.numberOfSecondsLeft());
-                SDL_Surface* timeLeftLabel = TTF_RenderText_Solid(scoreLabelFont, timeLeftText.c_str(), White);
-                auto timeLeftLabelRect = SDL_Rect{80,430,timeLeftLabel->w,timeLeftLabel->h};
-                SDL_Texture* timeLeftTexture = SDL_CreateTextureFromSurface( renderer, timeLeftLabel );
-                SDL_RenderCopy(renderer, timeLeftTexture, NULL, &timeLeftLabelRect);
-                SDL_DestroyTexture(timeLeftTexture);
-                
+                renderText(std::to_string(game.numberOfSecondsLeft()), 80, 430);
                 
                 
                 // Render rectangle around selected cell
@@ -311,7 +294,7 @@ struct GameEngine {
         bool isMouseDown = false;
         SDL_Event e;
         
-        auto lamm = [&](CandyCrushGameBoardChange gameBoardChange) {
+        auto renderCallback = [&](CandyCrushGameBoardChange gameBoardChange) {
             render(gameBoardChange);
         };
         auto numberOfSecondsLeft = -1;
@@ -354,7 +337,7 @@ struct GameEngine {
                         if (game.getGameBoard().areCellsAdjacent(move.from, move.to)) {
                             lastMouseDownX = -1;
                             lastMouseDownY = -1;
-                            game.play(move, lamm);
+                            game.play(move, renderCallback);
                             
                         } else {
                             std::cout << "Could not make the move" << std::endl;
@@ -377,7 +360,7 @@ struct GameEngine {
                     if (game.getGameBoard().areCellsAdjacent(move.from, move.to)) {
                         lastMouseDownX = -1;
                         lastMouseDownY = -1;
-                        game.play(move, lamm);
+                        game.play(move, renderCallback);
                         auto gameBoardChange = CandyCrushGameBoardChange(game);
                         render(gameBoardChange);
                     }
