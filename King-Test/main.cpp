@@ -10,25 +10,30 @@
 #include <SDL2_ttf/SDL_ttf.h>
 
 struct GameEngine {
-    
-    std::unordered_map<CandyCrush::Cell, SDL_Texture*> cellImages;
-    SDL_Texture* backgroundImage = nullptr;
-    SDL_Window* window = nullptr;
-    SDL_Renderer * renderer;
-    
     CandyCrush game;
-    const SDL_Rect drawArea = SDL_Rect{340,110,320,320};
-    const int cellHeight = drawArea.h / (int)game.getGameBoard().rows;
     
-    TTF_Font* scoreLabelFont;
-    TTF_Font* timeLeftLabelFont;
-    const int cellWidth = drawArea.w / (int)game.getGameBoard().columns;
+    bool firstGame = true;
     
-    int lastX = -1;
-    int lastY = -1;
+    const SDL_Rect gameBoardRect = SDL_Rect{340,110,320,320};
+    
+    int lastMouseDownX = -1;
+    int lastMouseDownY = -1;
     
     const int windowWidth = 755;
     const int windowHeight = 600;
+    
+    const int cellHeight = gameBoardRect.h / (int)game.getGameBoard().rows;
+    const int cellWidth = gameBoardRect.w / (int)game.getGameBoard().columns;
+    
+    SDL_Window* window = nullptr;
+    SDL_Renderer * renderer;
+    
+    std::unordered_map<CandyCrush::Cell, SDL_Texture*> cellTextures;
+    SDL_Texture* backgroundTexture = nullptr;
+    
+    TTF_Font* scoreLabelFont;
+    TTF_Font* timeLeftLabelFont;
+    
     
     GameEngine() {
         if( SDL_Init( SDL_INIT_VIDEO ) < 0 ) {
@@ -59,7 +64,7 @@ struct GameEngine {
         renderer = SDL_CreateRenderer(window, -1, 0);
         
         // Load assets
-        cellImages = {
+        cellTextures = {
             {CandyCrush::Blue, SDL_CreateTextureFromSurface(renderer, IMG_Load("assets/Blue.png"))},
             {CandyCrush::Green, SDL_CreateTextureFromSurface(renderer, IMG_Load("assets/Green.png"))},
             {CandyCrush::Red, SDL_CreateTextureFromSurface(renderer, IMG_Load("assets/Red.png"))},
@@ -67,26 +72,24 @@ struct GameEngine {
             {CandyCrush::Yellow, SDL_CreateTextureFromSurface(renderer, IMG_Load("assets/Yellow.png"))},
         };
         
-        backgroundImage = SDL_CreateTextureFromSurface(renderer, IMG_Load("assets/BackGround.jpg"));
+        backgroundTexture = SDL_CreateTextureFromSurface(renderer, IMG_Load("assets/BackGround.jpg"));
     }
+    
     
     ~GameEngine() {
-        for (auto cellImage: cellImages) {
+        for (auto cellImage: cellTextures) {
             SDL_DestroyTexture(cellImage.second);
         }
-        SDL_DestroyTexture(backgroundImage);
+        SDL_DestroyTexture(backgroundTexture);
     }
     
-    SDL_Surface* timeLeftLabel = nullptr;
-    SDL_Surface* scoreLabel = nullptr;
     
     SDL_Rect rectForCellPosition(const GameBoard::CellPosition& cellPosition, SDL_Texture * image) {
         int w, h;
         SDL_QueryTexture(image, NULL, NULL, &w, &h);
-        return SDL_Rect{cellWidth*cellPosition.column+cellWidth/2-w/2 + drawArea.x, cellHeight*cellPosition.row+cellHeight/2-h/2+drawArea.y, w, h};
+        return SDL_Rect{cellWidth*cellPosition.column+cellWidth/2-w/2 + gameBoardRect.x, cellHeight*cellPosition.row+cellHeight/2-h/2+gameBoardRect.y, w, h};
     }
     
-    bool firstGame = true;
     
     void render(CandyCrushGameBoardChange& gameBoardChange, int move = 1) {
         auto startTime = std::chrono::high_resolution_clock::now();
@@ -96,7 +99,7 @@ struct GameEngine {
         SDL_Color White = {255, 255, 255};
         
         if (firstGame) {
-            SDL_RenderCopy(renderer, backgroundImage, NULL, NULL);
+            SDL_RenderCopy(renderer, backgroundTexture, NULL, NULL);
             std::string timeLeftText = "Click to start";
             SDL_Surface* timeLeftLabel = TTF_RenderText_Solid(scoreLabelFont, timeLeftText.c_str(), White);
             auto timeLeftLabelRect = SDL_Rect{360, 250,timeLeftLabel->w,timeLeftLabel->h};
@@ -116,11 +119,11 @@ struct GameEngine {
             auto renderSpiral = [&](int selectedRow, int selectedColumn) {
                 for (int distance = 0; distance < cellWidth; distance += 4) {
                     SDL_RenderClear(renderer);
-                    SDL_RenderCopy(renderer, backgroundImage, NULL, NULL);
+                    SDL_RenderCopy(renderer, backgroundTexture, NULL, NULL);
                     for (auto row = 0; row < game.getGameBoard().rows; row++) {
                         for (auto column = 0; column < game.getGameBoard().columns; column++) {
                             auto removedCell = gameBoardChange.gameBoardChange[GameBoard::CellPosition(row, column)];
-                            auto image = cellImages[removedCell.second];
+                            auto image = cellTextures[removedCell.second];
                             auto fromDestination = rectForCellPosition(removedCell.first, image);
                             if (row == selectedRow && column == selectedColumn) {
                                 fromDestination.x += distance/2;
@@ -136,8 +139,8 @@ struct GameEngine {
                         }
                     }
                     SDL_RenderPresent(renderer);
-//                    SDL_Delay(50);
-
+                    //                    SDL_Delay(50);
+                    
                 }
             };
             
@@ -172,9 +175,9 @@ struct GameEngine {
             }
             
             SDL_Delay(200);
-
             
-            SDL_RenderCopy(renderer, backgroundImage, NULL, NULL);
+            
+            SDL_RenderCopy(renderer, backgroundTexture, NULL, NULL);
             std::string timeLeftText = "GAME OVER";
             SDL_Surface* timeLeftLabel = TTF_RenderText_Solid(scoreLabelFont, timeLeftText.c_str(), White);
             auto timeLeftLabelRect = SDL_Rect{390,250,timeLeftLabel->w,timeLeftLabel->h};
@@ -198,7 +201,7 @@ struct GameEngine {
                 SDL_RenderClear(renderer);
                 
                 // Render background image
-                SDL_RenderCopy(renderer, backgroundImage, NULL, NULL);
+                SDL_RenderCopy(renderer, backgroundTexture, NULL, NULL);
                 
                 
                 
@@ -221,16 +224,16 @@ struct GameEngine {
                 
                 
                 // Render rectangle around selected cell
-                auto selectedCell = cellPositionFromCoordinates(lastX, lastY);
+                auto selectedCell = cellPositionFromCoordinates(lastMouseDownX, lastMouseDownY);
                 if (game.getGameBoard().isCellValid(selectedCell)) {
-                    auto selectedCellRect = rectForCellPosition(selectedCell, cellImages[CandyCrush::Blue]);
+                    auto selectedCellRect = rectForCellPosition(selectedCell, cellTextures[CandyCrush::Blue]);
                     SDL_SetRenderDrawColor(renderer, 255, 80, 80, 1);
                     SDL_RenderDrawRect(renderer, &selectedCellRect);
                 }
                 
                 
                 for (auto removedCell: gameBoardChange.removedCells) {
-                    auto image = cellImages[removedCell.second];
+                    auto image = cellTextures[removedCell.second];
                     auto fromDestination = rectForCellPosition(removedCell.first, image);
                     
                     fromDestination.x += distance/2;
@@ -248,7 +251,7 @@ struct GameEngine {
                         auto from = gameBoardChange.gameBoardChange[to].first;
                         auto cell = gameBoardChange.gameBoardChange[to].second;
                         
-                        const auto& image = cellImages[cell];
+                        const auto& image = cellTextures[cell];
                         
                         
                         auto fromDestination = rectForCellPosition(from, image);
@@ -272,16 +275,16 @@ struct GameEngine {
                         }
                         
                         
-                        auto animatedDrawArea = drawArea.y-18;
+                        auto animatedgameBoardRect = gameBoardRect.y-18;
                         
                         // Handle animation from over the board
-                        auto cutoff = std::max(animatedDrawArea-fromDestination.y, 0);
+                        auto cutoff = std::max(animatedgameBoardRect-fromDestination.y, 0);
                         int w, h;
                         SDL_QueryTexture(image, NULL, NULL, &w, &h);
                         SDL_Rect srcRect = {0,cutoff,w,h-cutoff};
                         
-                        if (fromDestination.y < animatedDrawArea) {
-                            fromDestination.y = animatedDrawArea;
+                        if (fromDestination.y < animatedgameBoardRect) {
+                            fromDestination.y = animatedgameBoardRect;
                             fromDestination.h -= cutoff;
                         }
                         SDL_RenderCopy(renderer, image, &srcRect, &fromDestination);
@@ -300,14 +303,13 @@ struct GameEngine {
     }
     
     GameBoard::CellPosition cellPositionFromCoordinates(int x, int y) const {
-        return GameBoard::CellPosition((y-drawArea.y)/cellHeight, (x-drawArea.x)/cellWidth);
+        return GameBoard::CellPosition((y-gameBoardRect.y)/cellHeight, (x-gameBoardRect.x)/cellWidth);
     }
     
     void run() {
         bool quit = false;
-        SDL_Event e;
         bool isMouseDown = false;
-        
+        SDL_Event e;
         
         auto lamm = [&](CandyCrushGameBoardChange gameBoardChange) {
             render(gameBoardChange);
@@ -328,8 +330,8 @@ struct GameEngine {
                 
                 if (e.type == SDL_MOUSEBUTTONDOWN){
                     if (firstGame || game.gameOver()) {
-                        lastX = -1;
-                        lastY = -1;
+                        lastMouseDownX = -1;
+                        lastMouseDownY = -1;
                         firstGame = false;
                         game = CandyCrush();
                         CandyCrushGameBoardChange gameBoardChange(game);
@@ -345,36 +347,36 @@ struct GameEngine {
                         int x, y;
                         SDL_GetMouseState(&x, &y);
                         
-                        auto move = GameBoard::CellSwapMove(cellPositionFromCoordinates(x, y), cellPositionFromCoordinates(lastX, lastY));
+                        auto move = GameBoard::CellSwapMove(cellPositionFromCoordinates(x, y), cellPositionFromCoordinates(lastMouseDownX, lastMouseDownY));
                         
                         std::cout << move << std::endl;
                         
                         if (game.getGameBoard().areCellsAdjacent(move.from, move.to)) {
-                            lastX = -1;
-                            lastY = -1;
+                            lastMouseDownX = -1;
+                            lastMouseDownY = -1;
                             game.play(move, lamm);
                             
                         } else {
                             std::cout << "Could not make the move" << std::endl;
-                            lastX = x;
-                            lastY = y;
+                            lastMouseDownX = x;
+                            lastMouseDownY = y;
                         }
                         auto gameBoardChange = CandyCrushGameBoardChange(game);
                         render(gameBoardChange);
                     }
                 }
                 
-                if (e.type == SDL_MOUSEBUTTONUP && lastX != -1) {
+                if (e.type == SDL_MOUSEBUTTONUP && lastMouseDownX != -1) {
                     isMouseDown = false;
                 }
                 
                 if (e.type == SDL_MOUSEMOTION && isMouseDown) {
                     int x, y;
                     SDL_GetMouseState(&x, &y);
-                    auto move = GameBoard::CellSwapMove(cellPositionFromCoordinates(x, y), cellPositionFromCoordinates(lastX, lastY));
+                    auto move = GameBoard::CellSwapMove(cellPositionFromCoordinates(x, y), cellPositionFromCoordinates(lastMouseDownX, lastMouseDownY));
                     if (game.getGameBoard().areCellsAdjacent(move.from, move.to)) {
-                        lastX = -1;
-                        lastY = -1;
+                        lastMouseDownX = -1;
+                        lastMouseDownY = -1;
                         game.play(move, lamm);
                         auto gameBoardChange = CandyCrushGameBoardChange(game);
                         render(gameBoardChange);

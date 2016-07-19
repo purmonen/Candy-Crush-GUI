@@ -25,7 +25,7 @@ private:
         return cells[rand() % cells.size()];
     });
     
-    int timeLimitInSeconds = 3;
+    int timeLimitInSeconds = 15;
     
     
     int score = 0;
