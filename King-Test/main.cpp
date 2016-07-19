@@ -114,7 +114,7 @@ struct GameEngine {
             }
             
             auto renderSpiral = [&](int selectedRow, int selectedColumn) {
-                for (int distance = 0; distance < cellWidth; distance += 3) {
+                for (int distance = 0; distance < cellWidth; distance += 4) {
                     SDL_RenderClear(renderer);
                     SDL_RenderCopy(renderer, backgroundImage, NULL, NULL);
                     for (auto row = 0; row < game.getGameBoard().rows; row++) {
@@ -136,13 +136,14 @@ struct GameEngine {
                         }
                     }
                     SDL_RenderPresent(renderer);
-//                    SDL_Delay(1);
+//                    SDL_Delay(50);
+
                 }
             };
             
             
             int depth = 0;
-            while (depth <= game.getGameBoard().columns / 2) {
+            while (depth <= game.getGameBoard().columns/2) {
                 int topRow = depth;
                 for (auto selectedColumn = depth; selectedColumn < game.getGameBoard().columns-depth; selectedColumn++) {
                     renderSpiral(topRow, selectedColumn);
@@ -156,7 +157,7 @@ struct GameEngine {
                 
                 int bottomRow = (int)game.getGameBoard().rows - depth - 1;
                 if (topRow != bottomRow) {
-                    for (int selectedColumn = (int)game.getGameBoard().columns-depth; selectedColumn >= depth; selectedColumn--) {
+                    for (int selectedColumn = (int)game.getGameBoard().columns-1-depth; selectedColumn >= depth; selectedColumn--) {
                         renderSpiral(bottomRow, selectedColumn);
                     }
                 }
@@ -170,37 +171,8 @@ struct GameEngine {
                 depth++;
             }
             
-            
-            //            for (auto doneRows = 0; doneRows < game.getGameBoard().rows; doneRows++) {
-            //
-            //            for (auto distance = 0; distance < cellWidth; distance++) {
-            //
-            //                SDL_RenderClear(renderer);
-            //                SDL_RenderCopy(renderer, backgroundImage, NULL, NULL);
-            //
-            //                for (auto row = 0; row < game.getGameBoard().rows; row++) {
-            //                    for (auto column = 0; column < game.getGameBoard().columns; column++) {
-            //                        auto removedCell = gameBoardChange.gameBoardChange[GameBoard::CellPosition(row, column)];
-            //                        auto image = cellImages[removedCell.second];
-            //                        auto fromDestination = rectForCellPosition(removedCell.first, image);
-            //                        if (row == doneRows) {
-            //
-            //                        fromDestination.x += distance/2;
-            //                        fromDestination.y += distance/2;
-            //                        fromDestination.w -= distance;
-            //                        fromDestination.h -= distance;
-            //                        SDL_RenderCopy(renderer, image, nullptr, &fromDestination);
-            //                        } else if (row > doneRows) {
-            //                        SDL_RenderCopy(renderer, image, nullptr, &fromDestination);
-            //                        }
-            //
-            //                    }
-            //                }
-            //                SDL_RenderPresent(renderer);
-            //                SDL_Delay(3);
-            //
-            //            }
-            //            }
+            SDL_Delay(200);
+
             
             SDL_RenderCopy(renderer, backgroundImage, NULL, NULL);
             std::string timeLeftText = "GAME OVER";
