@@ -44,6 +44,8 @@ bool CandyCrush::performMove(GameBoard::CellSwapMove move, GameBoardChangeCallba
     
     // Move pieces
     gameBoard.swapCells(move);
+    
+    // This resets the gameBoardChange so the swap won't be seen as a change by the caller next time
     gameBoardChange = CandyCrushGameBoardChange(*this);
     
     // Horizontal matching – look for 3 or more consecutive columns on the same row with the same color
@@ -52,23 +54,30 @@ bool CandyCrush::performMove(GameBoard::CellSwapMove move, GameBoardChangeCallba
         auto lastCell = gameBoard[row][0];
         for (auto column = 0; column < gameBoard.columns; column++) {
             auto currentCell = gameBoard[row][column];
-            bool cellsMatched = lastCell == currentCell;
+            auto cellsMatched = lastCell == currentCell;
             if (cellsMatched) {
                 numberOfMatches++;
             }
             
+            // We should keep looking for more matches unless we find a non-matching cell or are at the end of the board
             if (numberOfMatches >= 3 && (!cellsMatched || column == gameBoard.rows -1 )) {
                 score += scoreForMatches(numberOfMatches);
                 auto lastColumnThatMatched = cellsMatched ? column : column-1;
                 
                 for (auto matchedColumn = lastColumnThatMatched-numberOfMatches+1; matchedColumn <= lastColumnThatMatched; matchedColumn++) {
-                    gameBoardChange.removedCells.push_back({{row, matchedColumn}, gameBoard[row][matchedColumn]});
                     
-                    // Move existing cells down
+                    // Matched columns will be removed
+                    GameBoard::CellPosition removedCellPosition = {row, matchedColumn};
+                    gameBoardChange.removedCells.push_back({removedCellPosition, gameBoard[removedCellPosition]});
+                    
+                    // Move existing cells above down one step
                     for (auto matchedRow = row-1; matchedRow >= 0; matchedRow--) {
-                        gameBoardChange.gameBoardChange[{matchedRow+1, matchedColumn}] = {{matchedRow, matchedColumn}, gameBoard[matchedRow][matchedColumn]};
+                        GameBoard::CellPosition cellPosition = {matchedRow, matchedColumn};
+                        GameBoard::CellPosition newCellPosition = {matchedRow+1, matchedColumn};
+                        gameBoardChange.gameBoardChange[newCellPosition] = {cellPosition, gameBoard[cellPosition]};
                     }
-                    // Create new cell
+                    
+                    // Create new cell at the top of the board and say it will come above the board (-1)
                     gameBoardChange.gameBoardChange[{0, matchedColumn}] = {{-1, matchedColumn}, randomCell()};
                 }
             }
@@ -85,7 +94,7 @@ bool CandyCrush::performMove(GameBoard::CellSwapMove move, GameBoardChangeCallba
         auto lastCell = gameBoard[0][column];
         for (auto row = 0; row < gameBoard.rows; row++) {
             auto currentCell = gameBoard[row][column];
-            bool cellsMatched = lastCell == currentCell;
+            auto cellsMatched = lastCell == currentCell;
             if (cellsMatched) {
                 numberOfMatches++;
             }
@@ -94,16 +103,19 @@ bool CandyCrush::performMove(GameBoard::CellSwapMove move, GameBoardChangeCallba
                 int firstPreviousRowNotMatching = cellsMatched ? row-numberOfMatches : row-numberOfMatches-1;
                 
                 for (auto i = firstPreviousRowNotMatching+1; i <= firstPreviousRowNotMatching+numberOfMatches; i++) {
-                    gameBoardChange.removedCells.push_back({{i, column}, gameBoard[i][column]});
+                    GameBoard::CellPosition removedCellPosition = {i, column};
+                    gameBoardChange.removedCells.push_back({removedCellPosition, gameBoard[removedCellPosition]});
                 }
                 
-                // Move down already existing cells
+                // Move down already existing cells from above
                 while (firstPreviousRowNotMatching >= 0) {
-                    gameBoardChange.gameBoardChange[{firstPreviousRowNotMatching+numberOfMatches, column}] = {{firstPreviousRowNotMatching, column}, gameBoard[firstPreviousRowNotMatching][column]};
+                    GameBoard::CellPosition cellPosition = {firstPreviousRowNotMatching, column};
+                    GameBoard::CellPosition newCellPosition = {firstPreviousRowNotMatching+numberOfMatches, column};
+                    gameBoardChange.gameBoardChange[newCellPosition] = {cellPosition, gameBoard[cellPosition]};
                     firstPreviousRowNotMatching--;
                 }
                 
-                // Add new cells at the top
+                // Add new cells at the top and say that they will come from above the board
                 for (auto i = 0; i < numberOfMatches; i++) {
                     gameBoardChange.gameBoardChange[{i, column}] = {{i-numberOfMatches, column}, randomCell()};
                 }

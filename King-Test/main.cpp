@@ -127,6 +127,7 @@ struct GameEngine {
             for (int distance = 0; distance < cellWidth; distance += 4) {
                 SDL_RenderClear(renderer);
                 SDL_RenderCopy(renderer, backgroundTexture, NULL, NULL);
+                renderScore();
                 for (auto row = 0; row < game.getGameBoard().rows; row++) {
                     for (auto column = 0; column < game.getGameBoard().columns; column++) {
                         auto cell = game.getGameBoard()[row][column];
@@ -193,14 +194,8 @@ struct GameEngine {
         auto finishedRendering = false;
         auto distance = 0;
 
-        if (isFirstGame) {
-            renderBackground();
-            renderText("Click to start", 360, 250);
-            SDL_RenderPresent(renderer);
-        } else if (game.gameOver()) {
-            renderGameOver();
-            SDL_RenderPresent(renderer);
-        } else {
+    
+
             while (!finishedRendering){
                 finishedRendering = true;
                 SDL_RenderClear(renderer);
@@ -279,7 +274,7 @@ struct GameEngine {
                 SDL_RenderPresent(renderer);
                 SDL_Delay(5);
                 distance += move;
-            }
+            
         }
         auto currentTime = std::chrono::high_resolution_clock::now();
         int numberOfMilliSecondsElapsed = (int)std::chrono::duration_cast<std::chrono::milliseconds>(currentTime-startTime).count();
@@ -309,13 +304,23 @@ struct GameEngine {
 //                numberOfSecondsLeft = game.numberOfSecondsLeft();
             
             
-            if (!hasShownGameOver) {
                 if (game.gameOver()) {
-                    hasShownGameOver = true;
+                    if (!hasShownGameOver) {
+                        hasShownGameOver = true;
+                        renderGameOver();
+                        SDL_RenderPresent(renderer);
+                    }
+                } else if (isFirstGame) {
+                    renderBackground();
+                    renderText("Click to start", 360, 250);
+                    SDL_RenderPresent(renderer);
+                } else {
+                    auto gameBoardChange = CandyCrushGameBoardChange(game);
+                    render(gameBoardChange);
                 }
-                auto gameBoardChange = CandyCrushGameBoardChange(game);
-                render(gameBoardChange);
-            }
+    
+        
+            
             
             while( SDL_PollEvent( &e ) != 0 ) {
                 if( e.type == SDL_QUIT ) {
@@ -335,8 +340,8 @@ struct GameEngine {
                         CandyCrushGameBoardChange gameBoardChange(game);
                         for (auto row = 0; row < game.getGameBoard().rows; row++) {
                             for (auto column = 0; column < game.getGameBoard().columns; column++) {
-                                auto pair = gameBoardChange.gameBoardChange[GameBoard::CellPosition(row, column)];
-                                gameBoardChange.gameBoardChange[GameBoard::CellPosition(row, column)] = {GameBoard::CellPosition(row-(int)game.getGameBoard().rows-(int)game.getGameBoard().columns+1+column, column), pair.second};
+                                auto pair = gameBoardChange.gameBoardChange[{row, column}];
+                                gameBoardChange.gameBoardChange[{row, column}] = {{row-(int)game.getGameBoard().rows-(int)game.getGameBoard().columns+1+column, column}, pair.second};
                             }
                         }
                         
