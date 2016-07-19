@@ -190,9 +190,11 @@ struct GameEngine {
     }
     
     
-    void renderGameBoard(CandyCrushGameBoardChange& gameBoardChange, int move = 1) {
+    void renderGameBoard(CandyCrushGameBoardChange& gameBoardChange, int distanceStep = 1) {
         //        auto startTime = std::chrono::high_resolution_clock::now();
         auto finishedRendering = false;
+        
+        // Number of pixels moved
         auto distance = 0;
         
         
@@ -255,16 +257,17 @@ struct GameEngine {
                         finishedRendering = false;
                     }
                     
-                    auto animatedgameBoardRect = gameBoardRect.y-18;
+                    // Parts of the new cells animating from above should be visible before they have reched the top row
+                    auto extendedGameBoardY = gameBoardRect.y-18;
                     
                     // Handle animation from over the board
-                    auto cutoff = std::max(animatedgameBoardRect-fromDestination.y, 0);
+                    auto cutoff = std::max(extendedGameBoardY-fromDestination.y, 0);
                     int w, h;
                     SDL_QueryTexture(image, NULL, NULL, &w, &h);
                     SDL_Rect srcRect = {0,cutoff,w,h-cutoff};
                     
-                    if (fromDestination.y < animatedgameBoardRect) {
-                        fromDestination.y = animatedgameBoardRect;
+                    if (fromDestination.y < extendedGameBoardY) {
+                        fromDestination.y = extendedGameBoardY;
                         fromDestination.h -= cutoff;
                     }
                     SDL_RenderCopy(renderer, image, &srcRect, &fromDestination);
@@ -274,7 +277,7 @@ struct GameEngine {
             
             SDL_RenderPresent(renderer);
             SDL_Delay(5);
-            distance += move;
+            distance += distanceStep;
         }
         //        auto currentTime = std::chrono::high_resolution_clock::now();
         //        int numberOfMilliSecondsElapsed = (int)std::chrono::duration_cast<std::chrono::milliseconds>(currentTime-startTime).count();
@@ -315,7 +318,6 @@ struct GameEngine {
             } else {
                 renderGameBoard();
             }
-            
             
             while( SDL_PollEvent( &e ) != 0 ) {
                 if( e.type == SDL_QUIT ) {

@@ -23,7 +23,7 @@ private:
         return cells[rand() % cells.size()];
     });
     
-    int timeLimitInSeconds = 20;
+    int timeLimitInSeconds = 60;
     int score = 0;
     Cell randomCell();
     void clearAllMatches(GameBoardChangeCallback callback = nullptr);
