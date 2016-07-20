@@ -189,7 +189,6 @@ struct GameEngine {
         renderText("GAME OVER", 390, 250, scoreLabelFont);
         renderScore();
         
-        
     }
     
     
@@ -313,6 +312,7 @@ struct GameEngine {
                     hasShownGameOver = true;
                     renderGameOver();
                     SDL_RenderPresent(renderer);
+                    SDL_Delay(2000);
                 }
             } else if (isFirstGame) {
                 renderBackground();
