@@ -188,6 +188,8 @@ struct GameEngine {
         renderBackground();
         renderText("GAME OVER", 390, 250, scoreLabelFont);
         renderScore();
+        
+        
     }
     
     

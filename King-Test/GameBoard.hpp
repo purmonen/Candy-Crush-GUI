@@ -96,6 +96,9 @@ namespace GameBoard {
         }
         
         bool areCellsAdjacent(CellPosition cell1, CellPosition cell2) const {
+            if (!isCellValid(cell1)) {
+                return false;
+            }
             auto cells = adjacentCells(cell1);
             return std::find(cells.begin(), cells.end(), cell2) != cells.end();
         }
