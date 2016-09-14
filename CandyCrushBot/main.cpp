@@ -75,6 +75,7 @@ std::vector<GameBoard::CellSwapMove> allSwapsForGame(const CandyCrush &game) {
 
 size_t numberForCellSwapMove(const GameBoard::CellSwapMove &move, const CandyCrush &game) {
     auto swaps = allSwapsForGame(game);
+    
     for (int i = 0; i < swaps.size(); i++) {
         if (swaps[i] == move) {
             return i;
@@ -149,11 +150,11 @@ int main(int argc, const char * argv[]) {
     CandyCrush game(100);
 
     
-    bool generate_data = false;
+    bool generate_data = true;
     
     if (generate_data) {
         while (!game.gameOver()) {
-            auto move = TensorFlowBot().selectMove(game);
+            auto move = RandomBot().selectMove(game);
             
             game.play(move);
             
@@ -168,7 +169,6 @@ int main(int argc, const char * argv[]) {
             auto moveNumber = numberForCellSwapMove(move, game);
             auto moveNumberMax = (game.getGameBoard().rows * (game.getGameBoard().rows-1) * 2);
             
-            
             assert(moveNumber < moveNumberMax);
             assert(moveNumber >= 0);
             
@@ -179,18 +179,25 @@ int main(int argc, const char * argv[]) {
         }
     } else {
         std::cout << "Running tensor flow!" << std::endl;
+        
+        int numberOfMoves = 0;
+        int numberOfValidMoves = 0;
         while (!game.gameOver()) {
             auto move = TensorFlowBot().selectMove(game);
             std::cout << stringForGame(game) << std::endl;
             std::cout << "Selected move: " << numberForCellSwapMove(move, game) << std::endl;
             
             auto legalMoves = game.legalMoves();
+            numberOfMoves++;
             if (std::find(legalMoves.begin(), legalMoves.end(), move) != legalMoves.end()) {
                 game.play(move);
+                numberOfValidMoves++;
             } else {
                 std::cout << "Invalid move" << std::endl;
                 game.play(RandomBot().selectMove(game));
             }
+            
+            std::cout << "Valid moves " << numberOfValidMoves << " / " << numberOfMoves << std::endl;
         }
     }
     return 0;
