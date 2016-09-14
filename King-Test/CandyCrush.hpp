@@ -16,6 +16,8 @@ public:
     typedef GameBoard::GameBoard<8, 8, CandyCrush::Cell> CandyCrushGameBoard;
     typedef std::function<void(CandyCrushGameBoardChange)> GameBoardChangeCallback;
     
+    CandyCrush(int timeLimitInSeconds): timeLimitInSeconds(timeLimitInSeconds) {}
+    
 private:
     // Creates randomized game board
     CandyCrushGameBoard gameBoard = CandyCrushGameBoard([](auto rows, auto columns) {

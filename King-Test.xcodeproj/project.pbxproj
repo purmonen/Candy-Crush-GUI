@@ -12,7 +12,9 @@
 		267ACDDA1D3D242F00E758FD /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 267ACDD71D3D242F00E758FD /* main.cpp */; };
 		267ACDDE1D3D246200E758FD /* SDL2_image.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 267ACDDB1D3D246200E758FD /* SDL2_image.framework */; };
 		267ACDDF1D3D246200E758FD /* SDL2_ttf.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 267ACDDC1D3D246200E758FD /* SDL2_ttf.framework */; };
-		267ACDE01D3D246200E758FD /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 267ACDDD1D3D246200E758FD /* SDL2.framework */; };
+		E3F68FD21D88B42D00E98183 /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E3F68FD11D88B42D00E98183 /* SDL2.framework */; };
+		E3F68FDA1D88B69D00E98183 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E3F68FD91D88B69D00E98183 /* main.cpp */; };
+		E3F68FDE1D88B87F00E98183 /* CandyCrush.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 267ACDD31D3D242F00E758FD /* CandyCrush.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -26,6 +28,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		E3F68FD51D88B69D00E98183 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
@@ -38,7 +49,9 @@
 		267ACDD71D3D242F00E758FD /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		267ACDDB1D3D246200E758FD /* SDL2_image.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2_image.framework; path = ../../../../Library/Frameworks/SDL2_image.framework; sourceTree = "<group>"; };
 		267ACDDC1D3D246200E758FD /* SDL2_ttf.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2_ttf.framework; path = ../../../../Library/Frameworks/SDL2_ttf.framework; sourceTree = "<group>"; };
-		267ACDDD1D3D246200E758FD /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2.framework; path = ../../../../Library/Frameworks/SDL2.framework; sourceTree = "<group>"; };
+		E3F68FD11D88B42D00E98183 /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2.framework; path = ../../../../Library/Frameworks/SDL2.framework; sourceTree = "<group>"; };
+		E3F68FD71D88B69D00E98183 /* CandyCrushBot */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = CandyCrushBot; sourceTree = BUILT_PRODUCTS_DIR; };
+		E3F68FD91D88B69D00E98183 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -48,7 +61,14 @@
 			files = (
 				267ACDDE1D3D246200E758FD /* SDL2_image.framework in Frameworks */,
 				267ACDDF1D3D246200E758FD /* SDL2_ttf.framework in Frameworks */,
-				267ACDE01D3D246200E758FD /* SDL2.framework in Frameworks */,
+				E3F68FD21D88B42D00E98183 /* SDL2.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E3F68FD41D88B69D00E98183 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -58,10 +78,11 @@
 		267ACDC01D3D23FB00E758FD = {
 			isa = PBXGroup;
 			children = (
+				E3F68FD11D88B42D00E98183 /* SDL2.framework */,
 				267ACDDB1D3D246200E758FD /* SDL2_image.framework */,
 				267ACDDC1D3D246200E758FD /* SDL2_ttf.framework */,
-				267ACDDD1D3D246200E758FD /* SDL2.framework */,
 				267ACDCB1D3D23FB00E758FD /* King-Test */,
+				E3F68FD81D88B69D00E98183 /* CandyCrushBot */,
 				267ACDCA1D3D23FB00E758FD /* Products */,
 			);
 			sourceTree = "<group>";
@@ -70,6 +91,7 @@
 			isa = PBXGroup;
 			children = (
 				267ACDC91D3D23FB00E758FD /* King-Test */,
+				E3F68FD71D88B69D00E98183 /* CandyCrushBot */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -85,6 +107,14 @@
 				2619C6691D3E74A200D0B721 /* assets */,
 			);
 			path = "King-Test";
+			sourceTree = "<group>";
+		};
+		E3F68FD81D88B69D00E98183 /* CandyCrushBot */ = {
+			isa = PBXGroup;
+			children = (
+				E3F68FD91D88B69D00E98183 /* main.cpp */,
+			);
+			path = CandyCrushBot;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -107,6 +137,23 @@
 			productReference = 267ACDC91D3D23FB00E758FD /* King-Test */;
 			productType = "com.apple.product-type.tool";
 		};
+		E3F68FD61D88B69D00E98183 /* CandyCrushBot */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E3F68FDB1D88B69D00E98183 /* Build configuration list for PBXNativeTarget "CandyCrushBot" */;
+			buildPhases = (
+				E3F68FD31D88B69D00E98183 /* Sources */,
+				E3F68FD41D88B69D00E98183 /* Frameworks */,
+				E3F68FD51D88B69D00E98183 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = CandyCrushBot;
+			productName = CandyCrushBot;
+			productReference = E3F68FD71D88B69D00E98183 /* CandyCrushBot */;
+			productType = "com.apple.product-type.tool";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -117,6 +164,9 @@
 				ORGANIZATIONNAME = "Sami Purmonen";
 				TargetAttributes = {
 					267ACDC81D3D23FB00E758FD = {
+						CreatedOnToolsVersion = 7.3.1;
+					};
+					E3F68FD61D88B69D00E98183 = {
 						CreatedOnToolsVersion = 7.3.1;
 					};
 				};
@@ -134,6 +184,7 @@
 			projectRoot = "";
 			targets = (
 				267ACDC81D3D23FB00E758FD /* King-Test */,
+				E3F68FD61D88B69D00E98183 /* CandyCrushBot */,
 			);
 		};
 /* End PBXProject section */
@@ -145,6 +196,15 @@
 			files = (
 				267ACDD81D3D242F00E758FD /* CandyCrush.cpp in Sources */,
 				267ACDDA1D3D242F00E758FD /* main.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E3F68FD31D88B69D00E98183 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E3F68FDA1D88B69D00E98183 /* main.cpp in Sources */,
+				E3F68FDE1D88B87F00E98183 /* CandyCrush.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -254,6 +314,22 @@
 			};
 			name = Release;
 		};
+		E3F68FDC1D88B69D00E98183 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		E3F68FDD1D88B69D00E98183 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -274,6 +350,14 @@
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
+		};
+		E3F68FDB1D88B69D00E98183 /* Build configuration list for PBXNativeTarget "CandyCrushBot" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E3F68FDC1D88B69D00E98183 /* Debug */,
+				E3F68FDD1D88B69D00E98183 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
 		};
 /* End XCConfigurationList section */
 	};

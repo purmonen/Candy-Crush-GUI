@@ -39,6 +39,10 @@ namespace GameBoard {
         CellPosition to;
         
         CellSwapMove(CellPosition from, CellPosition to): from(from), to(to) {}
+        
+        bool operator ==(const CellSwapMove& move) const {
+            return from == move.from && to == move.to;
+        }
     };
     
     std::ostream& operator<<(std::ostream& os, const CellSwapMove& move);
