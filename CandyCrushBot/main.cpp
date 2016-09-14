@@ -108,6 +108,27 @@ public:
     }
 };
 
+class DeterministicBot {
+public:
+    GameBoard::CellSwapMove selectMove(CandyCrush game) {
+        auto legalMoves = game.legalMoves();
+        int maxRow = 0;
+        int maxColumn = 0;
+        GameBoard::CellSwapMove maxMove = legalMoves[0];
+        
+        for (auto move: legalMoves) {
+            int row = std::max(move.from.row, move.to.row);
+            int column = std::max(move.from.column, move.to.column);
+            if (row > maxRow || (row == maxRow && column >= maxColumn)) {
+                maxRow = row;
+                maxColumn = column;
+                maxMove = move;
+            }
+        }
+        return maxMove;
+    }
+};
+
 std::string stringForGame(const CandyCrush &game) {
     std::stringstream ss;
     auto gameBoard = game.getGameBoard();
@@ -147,14 +168,34 @@ public:
 };
 
 int main(int argc, const char * argv[]) {
-    CandyCrush game(100);
+    
+    
+    bool generateData = false;
+    int timeLimit = 10*60;
+    
+    for (int i = 1; i < argc; i++) {
+        std::string arg = argv[i];
+        if (arg == "--generate_data") {
+            generateData = true;
+        }
+        if (arg == "-time_limit") {
+            if (i+1 < argc) {
+                timeLimit = std::atoi(argv[i+1]);
+                std::cout << "Time limit " << timeLimit;
+            } else {
+                std::cout << "Missing time limit" << std::endl;
+            }
+        }
+    }
+    
+    CandyCrush game(timeLimit);
 
     
-    bool generate_data = true;
     
-    if (generate_data) {
+    
+    if (generateData) {
         while (!game.gameOver()) {
-            auto move = RandomBot().selectMove(game);
+            auto move = DeterministicBot().selectMove(game);
             
             game.play(move);
             
