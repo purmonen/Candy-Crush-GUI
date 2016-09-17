@@ -1,8 +1,7 @@
 #include "CandyCrush.hpp"
 
 CandyCrush::Cell CandyCrush::randomCell() {
-    std::vector<CandyCrush::Cell> cells = {Green, Blue, Purple, Red, Yellow};
-    return cells[rand() % cells.size()];
+    return cells[arc4random() % numberOfCandies];
 }
 
 // When randomly generating new cells some of them will create matches that must be cleared after each move and when initializing the game
@@ -225,8 +224,8 @@ std::ostream& operator<<(std::ostream& os, const CandyCrush& game) {
         {CandyCrush::Green, "G"},
         {CandyCrush::Blue, "B"},
         {CandyCrush::Purple, "P"},
-        {CandyCrush::Yellow, "Y"},
-        {CandyCrush::Red, "R"},
+//        {CandyCrush::Yellow, "Y"},
+//        {CandyCrush::Red, "R"},
         //{CandyCrush::Purple, "!"}
     };
     

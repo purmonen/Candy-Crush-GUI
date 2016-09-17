@@ -13,24 +13,31 @@ struct CandyCrushGameBoardChange;
 class CandyCrush {
 public:
     enum Cell {Green, Blue, Purple, Red, Yellow};
-    typedef GameBoard::GameBoard<8, 8, CandyCrush::Cell> CandyCrushGameBoard;
+    std::vector<CandyCrush::Cell> cells = {Cell::Green, Cell::Blue, Cell::Purple, Cell::Red, Cell::Yellow};
+    typedef GameBoard::GameBoard<4, 4, CandyCrush::Cell> CandyCrushGameBoard;
     typedef std::function<void(CandyCrushGameBoardChange)> GameBoardChangeCallback;
     
-    CandyCrush(int timeLimitInSeconds): timeLimitInSeconds(timeLimitInSeconds) {}
+    CandyCrush(int timeLimitInSeconds, int numberOfCandies): timeLimitInSeconds(timeLimitInSeconds), numberOfCandies(numberOfCandies) {
+        if (numberOfCandies > cells.size()) {
+            throw "Number of candies must be less than or equal to " + std::to_string(cells.size());
+        }
+        clearAllMatches();
+        score = 0;
+    }
     
 private:
     // Creates randomized game board
-    CandyCrushGameBoard gameBoard = CandyCrushGameBoard([](auto rows, auto columns) {
-        std::vector<CandyCrush::Cell> cells = {Green, Blue, Purple, Red, Yellow};
-        return cells[rand() % cells.size()];
+    int numberOfCandies = 5;
+    CandyCrushGameBoard gameBoard = CandyCrushGameBoard([&](auto rows, auto columns) {
+        return randomCell();
     });
     
     int timeLimitInSeconds = 60;
     int score = 0;
+    
     Cell randomCell();
     void clearAllMatches(GameBoardChangeCallback callback = nullptr);
     std::chrono::time_point<std::chrono::high_resolution_clock> startTime = std::chrono::high_resolution_clock::now();
-    
     int scoreForMatches(int numberOfMatches) const;
     bool performMove(GameBoard::CellSwapMove move, GameBoardChangeCallback callback = nullptr);
 public:
