@@ -10,7 +10,12 @@
 #include <SDL2_ttf/SDL_ttf.h>
 
 struct GameEngine {
-    CandyCrush game = CandyCrush();
+    
+    CandyCrush createGame() {
+        return CandyCrush(8, 8, 60, 5);
+    }
+    
+    CandyCrush game = createGame();
     
     bool isFirstGame = true;
     
@@ -333,7 +338,7 @@ struct GameEngine {
                         lastMouseDownX = -1;
                         lastMouseDownY = -1;
                         isFirstGame = false;
-                        game = CandyCrush(60, 5);
+                        game = createGame();
                         hasShownGameOver = false;
                         
                         // Intro animation - all cells falls from the top in a triangular fashion

@@ -10,14 +10,15 @@
 
 struct CandyCrushGameBoardChange;
 
+
 class CandyCrush {
 public:
     enum Cell {Green, Blue, Purple, Red, Yellow};
     std::vector<CandyCrush::Cell> cells = {Cell::Green, Cell::Blue, Cell::Purple, Cell::Red, Cell::Yellow};
-    typedef GameBoard::GameBoard<4, 4, CandyCrush::Cell> CandyCrushGameBoard;
+    typedef GameBoard::GameBoard<CandyCrush::Cell> CandyCrushGameBoard;
     typedef std::function<void(CandyCrushGameBoardChange)> GameBoardChangeCallback;
     
-    CandyCrush(int timeLimitInSeconds, int numberOfCandies): timeLimitInSeconds(timeLimitInSeconds), numberOfCandies(numberOfCandies) {
+    CandyCrush(size_t rows, size_t columns, int timeLimitInSeconds, int numberOfCandies): rows(rows), columns(columns), timeLimitInSeconds(timeLimitInSeconds), numberOfCandies(numberOfCandies) {
         if (numberOfCandies > cells.size()) {
             throw "Number of candies must be less than or equal to " + std::to_string(cells.size());
         }
@@ -28,7 +29,10 @@ public:
 private:
     // Creates randomized game board
     int numberOfCandies = 5;
-    CandyCrushGameBoard gameBoard = CandyCrushGameBoard([&](auto rows, auto columns) {
+    size_t rows = 8;
+    size_t columns = 8;
+    
+    CandyCrushGameBoard gameBoard = CandyCrushGameBoard(rows, columns, [&](auto rows, auto columns) {
         return randomCell();
     });
     

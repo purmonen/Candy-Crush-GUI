@@ -47,34 +47,30 @@ namespace GameBoard {
     
     std::ostream& operator<<(std::ostream& os, const CellSwapMove& move);
     
-    template<size_t ROWS, size_t COLUMNS, typename CellType>
+    template<typename CellType>
     class GameBoard {
     private:
-        CellType gameBoard[ROWS][COLUMNS];
+        std::vector<std::vector<CellType>> gameBoard;
     public:
+        size_t rows;
+        size_t columns;
         
-        size_t rows = ROWS;
-        size_t columns = COLUMNS;
-        
-        GameBoard(const std::function<CellType(size_t, size_t)> defaultValueForCell) {
+        GameBoard(const size_t rows, const size_t columns, const std::function<CellType(size_t, size_t)> defaultValueForCell): rows(rows), columns(columns) {
+            for (auto row = 0; row < rows; row++) {
+                gameBoard.push_back(std::vector<CellType>(columns));
+            }
+            
             performActionOnCell([&](auto row, auto column, auto& cell) {
                 cell = defaultValueForCell(row, column);
             });
         }
         
-        
-        GameBoard(const CellType defaultValue) {
-            performActionOnCell([&](auto row, auto column, auto& cell) {
-                cell = defaultValue;
-            });
-        }
-        
-        CellType* operator[](const size_t index) {
+        std::vector<CellType>& operator[](const size_t index) {
             return gameBoard[index];
         }
         
         
-        const CellType* operator[](const size_t index) const {
+        const std::vector<CellType> operator[](const size_t index) const {
             return gameBoard[index];
         }
         
