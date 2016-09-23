@@ -12,46 +12,8 @@
 #include "GameBoard.hpp"
 #include <vector>
 #include <sstream>
-
-/*
-size_t numberForMove(const GameBoard::CellSwapMove &move, const CandyCrush &game) {
-    auto row = std::min(move.from.row, move.to.row);
-    auto column = std::min(move.from.column, move.to.column);
-    
-    auto columns = game.getGameBoard().columns;
-    auto rows = game.getGameBoard().rows;
-    if (move.from.row == move.to.row) {
-        columns--;
-        return row * columns + column % columns;
-    } else {
-        rows--;
-        return rows * columns + row * columns + column % columns;
-    }
-
-}
- */
-
-/*
- auto oldMoveNumber = 0;
- 
- for (auto row = 0; row < game.getGameBoard().rows; row++) {
- for (auto column = 0; column < game.getGameBoard().columns-1; column++) {
- auto move = GameBoard::CellSwapMove(GameBoard::CellPosition(row, column), GameBoard::CellPosition(row, column+1));
- auto moveNumber = numberForMove(move, game);
- assert(oldMoveNumber == 0 || oldMoveNumber+1 == moveNumber);
- std::cout << moveNumber << std::endl;
- }
- }
- 
- for (auto row = 0; row < game.getGameBoard().rows-1; row++) {
- for (auto column = 0; column < game.getGameBoard().columns; column++) {
- auto move = GameBoard::CellSwapMove(GameBoard::CellPosition(row, column), GameBoard::CellPosition(row+1, column));
- auto moveNumber = numberForMove(move, game);
- assert(oldMoveNumber == 0 || oldMoveNumber+1 == moveNumber);
- std::cout << moveNumber << std::endl;
- }
- }
- */
+#include <ctime>
+#include <unordered_map>
 
 std::vector<GameBoard::CellSwapMove> allSwapsForGame(const CandyCrush &game) {
     std::vector<GameBoard::CellSwapMove> swaps;
@@ -86,6 +48,28 @@ size_t numberForCellSwapMove(const GameBoard::CellSwapMove &move, const CandyCru
 
 GameBoard::CellSwapMove cellSwapMoveForNumber(size_t number, const CandyCrush &game) {
     return allSwapsForGame(game)[number];
+}
+
+std::string gameToLine(const CandyCrush &game) {
+    std::stringstream string;
+    
+    auto& gameBoard = game.getGameBoard();
+    for (auto row = 0; row  < gameBoard.rows; row++) {
+        for (auto column = 0; column  < gameBoard.columns; column++) {
+            string << gameBoard[row][column] << " ";
+        }
+    }
+    return string.str();
+}
+
+std::string moveToLine(size_t moveNumber, const CandyCrush &game) {
+    std::stringstream string;
+    string << moveNumber;
+    //    auto moveNumberMax = (game.getGameBoard().rows * (game.getGameBoard().rows-1) * 2);
+    //    for (auto i = 0; i < moveNumberMax; i++) {
+    //        string << (i == moveNumber ? 1 : 0) << " ";
+    //    }
+    return string.str();
 }
 
 
@@ -129,23 +113,62 @@ public:
     }
 };
 
-std::string stringForGame(const CandyCrush &game) {
-    std::stringstream ss;
-    auto gameBoard = game.getGameBoard();
-    for (auto row = 0; row  < gameBoard.rows; row++) {
-        for (auto column = 0; column  < gameBoard.columns; column++) {
-            ss << gameBoard[row][column] << " ";
+
+class WolframBot {
+public:
+    GameBoard::CellSwapMove selectMove(CandyCrush game) {
+        std::string command = "/Applications/Mathematica.app/Contents/MacOS/WolframKernel -script /Users/samipurmonen/Desktop/ai-bot/predict2.m  '" + gameToLine(game) + "'";
+        
+        std::cout << command << std::endl;
+        //command = "echo $USER";
+        auto python_output = exec(command.c_str());
+        std::cout << python_output;
+
+
+        std::vector<int> moveProbabilities(allSwapsForGame(game).size());
+        size_t move = 0;
+        int probability = 0;
+        std::istringstream s2(python_output);
+        while (s2 >> move) {
+            s2 >> probability;
+            moveProbabilities[move] = probability;
         }
+        
+        std::vector<int> sortedMoves(moveProbabilities.size());
+        for (auto i = 0; i < sortedMoves.size(); i++) {
+            sortedMoves[i] = i;
+        }
+        
+        std::sort(sortedMoves.begin(), sortedMoves.end(), [&](auto x, auto y){
+            return moveProbabilities[x] > moveProbabilities[y];
+        });
+        
+        for (auto i = 0; i < sortedMoves.size(); i++) {
+            auto move = sortedMoves[i];
+            std::cout << i << ". Move " << move << " " << moveProbabilities[move] << " " << game.isLegalMove(cellSwapMoveForNumber(move, game)) << std::endl;
+        }
+        
+        for (int i = 0; i < sortedMoves.size(); i++) {
+            auto move = sortedMoves[i];
+            if (game.isLegalMove(cellSwapMoveForNumber(move, game))) {
+                std::cout << "Move found on index " << i << std::endl;
+                return cellSwapMoveForNumber(move, game);
+            }
+        }
+        throw "Error: move not found but there must be one!";
+        
     }
-    return ss.str();
-}
+    
+    const std::string name = "WolframBot";
+};
+
 
 class TensorFlowBot {
 public:
     GameBoard::CellSwapMove selectMove(CandyCrush game) {
-        std::string command = "python3 /Users/samipurmonen/Desktop/ai-bot/candy_bot.py predict '" + stringForGame(game) + "'";
+        return cellSwapMoveForNumber(0, game);
+        std::string command = "/Users/samipurmonen/Desktop/ai-bot/ai_venv/bin/python3 /Users/samipurmonen/Desktop/ai-bot/candy_bot.py predict  '" + gameToLine(game) + "' -hidden_layers 3";
         auto python_output = exec(command.c_str());
-        
         double maxProbability = 0.0;
         size_t maxMove = 0;
         size_t move = 0;
@@ -165,13 +188,21 @@ public:
         
         return cellSwapMoveForNumber(maxMove, game);
     }
+    
+    const std::string name = "TensorFlowBot";
 };
+
+
+CandyCrush createGame() {
+    return CandyCrush(8, 8, 60, 5);
+}
+
 
 int main(int argc, const char * argv[]) {
     
-    
     bool generateData = false;
     int timeLimit = 10*60;
+    int numberOfMoves = 10;
     
     for (int i = 1; i < argc; i++) {
         std::string arg = argv[i];
@@ -181,65 +212,171 @@ int main(int argc, const char * argv[]) {
         if (arg == "-time_limit") {
             if (i+1 < argc) {
                 timeLimit = std::atoi(argv[i+1]);
-                std::cout << "Time limit " << timeLimit;
             } else {
                 std::cout << "Missing time limit" << std::endl;
             }
         }
+        if (arg == "-number_of_moves") {
+            if (i+1 < argc) {
+                numberOfMoves = std::atoi(argv[i+1]);
+            } else {
+                std::cout << "Missing number of moves" << std::endl;
+            }
+        }
     }
     
-    CandyCrush game(timeLimit);
-
+    CandyCrush game = createGame();
+//    generateData = true;
     
     
+    
+    std::unordered_map<std::string, std::string> gameMoveMap;
     
     if (generateData) {
-        while (!game.gameOver()) {
+        
+        std::cout << allSwapsForGame(game).size() << std::endl;
+        
+        auto moveNumberMax = (game.getGameBoard().rows * (game.getGameBoard().rows-1) * 2);
+        
+        int moveCounts[moveNumberMax];
+        for (auto i = 0; i < moveNumberMax; i++) {
+            moveCounts[i] = 0;
+        }
+        
+        for (auto i = 0; i < numberOfMoves; i++) {
+            CandyCrush game = createGame();
+            if (game.gameOver()) {
+                continue;
+            }
             auto move = DeterministicBot().selectMove(game);
             
-            game.play(move);
-            
-            auto gameBoard = game.getGameBoard();
-            for (auto row = 0; row  < gameBoard.rows; row++) {
-                for (auto column = 0; column  < gameBoard.columns; column++) {
-                    std::cout << gameBoard[row][column] << " ";
-                }
-            }
-            std::cout << std::endl;
-            
             auto moveNumber = numberForCellSwapMove(move, game);
-            auto moveNumberMax = (game.getGameBoard().rows * (game.getGameBoard().rows-1) * 2);
+            
             
             assert(moveNumber < moveNumberMax);
             assert(moveNumber >= 0);
             
-            for (auto i = 0; i < moveNumberMax; i++) {
-                std::cout << (i == moveNumber ? 1 : 0) << " ";
+            std::string gameString = gameToLine(game);
+            std::string moveString = moveToLine(moveNumber, game);
+            
+            if (gameMoveMap.find(gameString) == gameMoveMap.end()) {
+                gameMoveMap[gameString] = moveString;
+                moveCounts[moveNumber]++;
+                std::cout << gameString;
+                std::cout << std::endl;
+                std::cout << moveString;
+                std::cout << std::endl;
+            } else {
+                assert(gameMoveMap[gameString] == moveString);
             }
-            std::cout << std::endl;
+            game.play(move);
+            
         }
+        
+        
+//         for (auto i = 0; i < moveNumberMax; i++) {
+//         std::cout << i << ": " << moveCounts[i] / double(numberOfMoves) * 100 << std::endl;
+//         }
+        
+        
+        /*
+         while (!game.gameOver()) {
+         auto move = DeterministicBot().selectMove(game);
+         
+         game.play(move);
+         
+         auto gameBoard = game.getGameBoard();
+         for (auto row = 0; row  < gameBoard.rows; row++) {
+         for (auto column = 0; column  < gameBoard.columns; column++) {
+         std::cout << gameBoard[row][column] << " ";
+         }
+         }
+         std::cout << std::endl;
+         
+         auto moveNumber = numberForCellSwapMove(move, game);
+         auto moveNumberMax = (game.getGameBoard().rows * (game.getGameBoard().rows-1) * 2);
+         
+         assert(moveNumber < moveNumberMax);
+         assert(moveNumber >= 0);
+         
+         for (auto i = 0; i < moveNumberMax; i++) {
+         std::cout << (i == moveNumber ? 1 : 0) << " ";
+         }
+         std::cout << std::endl;
+         }
+         */
     } else {
         std::cout << "Running tensor flow!" << std::endl;
         
-        int numberOfMoves = 0;
-        int numberOfValidMoves = 0;
+        
+        struct BotRun {
+            int numberOfMoves = 0;
+            int numberOfValidMoves = 0;
+            int correctMoves = 0;
+        };
+        
+        auto tensorFlowBot = TensorFlowBot();
+        auto wolframBot = WolframBot();
+        
+        std::unordered_map<std::string, BotRun> botRuns;
+        botRuns[tensorFlowBot.name] = BotRun();
+        botRuns[wolframBot.name] = BotRun();
+        
+        auto moveForBot = [&](std::string botName, const CandyCrush &game) { return botName == tensorFlowBot.name ? tensorFlowBot.selectMove(game) : wolframBot.selectMove(game); };
+        
+        std::vector<std::string> bots = {wolframBot.name};
+        auto i = 0;
         while (!game.gameOver()) {
-            auto move = TensorFlowBot().selectMove(game);
-            std::cout << stringForGame(game) << std::endl;
-            std::cout << "Selected move: " << numberForCellSwapMove(move, game) << std::endl;
+            game = createGame();
             
-            auto legalMoves = game.legalMoves();
-            numberOfMoves++;
-            if (std::find(legalMoves.begin(), legalMoves.end(), move) != legalMoves.end()) {
-                game.play(move);
-                numberOfValidMoves++;
-            } else {
-                std::cout << "Invalid move" << std::endl;
-                game.play(RandomBot().selectMove(game));
+            auto gameString = gameToLine(game);
+            
+            if (gameMoveMap.find(gameString) != gameMoveMap.end()) {
+                continue;
+            }
+            gameMoveMap[gameString] = "yolo";
+            
+            
+            const auto move = DeterministicBot().selectMove(game);
+            
+            std::cout << "<<<<<<<<<< " << "Real World" << " >>>>>>>>>>>" << std::endl;
+            std::cout << gameToLine(game) << std::endl;
+            std::cout << "Number of valid moves: " << game.legalMoves().size() << std::endl;
+            std::cout << "Selected move: " << numberForCellSwapMove(move, game) << std::endl;
+            std::cout << std::endl;
+            
+            for (auto bot: bots) {
+                
+                std::cout << "<<<<<<<<<< " << bot << " >>>>>>>>>>>" << std::endl;
+                
+                auto predicted_move = moveForBot(bot, game);
+                
+                if (move == predicted_move) {
+                    botRuns[bot].correctMoves++;
+                }
+                
+                std::cout << "Predicted move: " << numberForCellSwapMove(predicted_move, game) << std::endl;
+                
+                auto legalMoves = game.legalMoves();
+                botRuns[bot].numberOfMoves++;
+                if (std::find(legalMoves.begin(), legalMoves.end(), predicted_move) != legalMoves.end()) {
+                    botRuns[bot].numberOfValidMoves++;
+                }
+                std::cout << "Valid moves " << botRuns[bot].numberOfValidMoves << " / " << botRuns[bot].numberOfMoves << std::endl;
+                std::cout << "Correct moves " << botRuns[bot].correctMoves << " / " << botRuns[bot].numberOfMoves << std::endl;
+                std::cout << std::endl;
             }
             
-            std::cout << "Valid moves " << numberOfValidMoves << " / " << numberOfMoves << std::endl;
+            game.play(move);
+            
+            
+            if (i > 300) {
+                break;
+            }
         }
+        
+//        std::cout << "Valid moves " << numberOfValidMoves / numberOfMoves * 100 << std::endl;
+//        std::cout << "Correct moves " << correctMoves / numberOfMoves * 100 << std::endl;
     }
     return 0;
 }
