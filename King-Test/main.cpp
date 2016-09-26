@@ -8,6 +8,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2_image/SDL_image.h>
 #include <SDL2_ttf/SDL_ttf.h>
+#include "bots.hpp"
 
 struct GameEngine {
     
@@ -22,8 +23,9 @@ struct GameEngine {
     // The area of the window where the game board is displayed
     const SDL_Rect gameBoardRect = SDL_Rect{340,110,320,320};
     
-    int lastMouseDownX = -1;
-    int lastMouseDownY = -1;
+    GameBoard::CellPosition noSelectedCell = GameBoard::CellPosition(-1,-1);
+    GameBoard::CellPosition lastSelectedCell = noSelectedCell;
+    GameBoard::CellPosition nextSelectedCell = noSelectedCell;
     
     const int windowWidth = 755;
     const int windowHeight = 600;
@@ -215,12 +217,17 @@ struct GameEngine {
             renderText(std::to_string(game.numberOfSecondsLeft()), 80, 415, timeLeftLabelFont);
             
             // Render rectangle around selected cell
-            auto selectedCell = cellPositionFromCoordinates(lastMouseDownX, lastMouseDownY);
-            if (game.getGameBoard().isCellValid(selectedCell)) {
-                auto selectedCellRect = rectForCellPosition(selectedCell, cellTextures[CandyCrush::Blue]);
-                SDL_SetRenderDrawColor(renderer, 255, 80, 80, 1);
-                SDL_RenderDrawRect(renderer, &selectedCellRect);
+            //            auto selectedCell = cellPositionFromCoordinates(lastMouseDownX, lastMouseDownY);
+            
+            
+            for (auto selectedCell: {lastSelectedCell, nextSelectedCell}) {
+                if (!(selectedCell == noSelectedCell)) {
+                    auto selectedCellRect = rectForCellPosition(selectedCell, cellTextures[CandyCrush::Blue]);
+                    SDL_SetRenderDrawColor(renderer, 255, 80, 80, 1);
+                    SDL_RenderDrawRect(renderer, &selectedCellRect);
+                }
             }
+            
             
             for (auto removedCell: gameBoardChange.removedCells) {
                 auto image = cellTextures[removedCell.second];
@@ -335,8 +342,7 @@ struct GameEngine {
                 // Handle clicks
                 if (e.type == SDL_MOUSEBUTTONDOWN){
                     if (isFirstGame || game.gameOver()) {
-                        lastMouseDownX = -1;
-                        lastMouseDownY = -1;
+                        lastSelectedCell = noSelectedCell;
                         isFirstGame = false;
                         game = createGame();
                         hasShownGameOver = false;
@@ -355,21 +361,20 @@ struct GameEngine {
                         isMouseDown = true;
                         int x, y;
                         SDL_GetMouseState(&x, &y);
-                        auto move = GameBoard::CellSwapMove(cellPositionFromCoordinates(x, y), cellPositionFromCoordinates(lastMouseDownX, lastMouseDownY));
+                        auto newSelectedCell = cellPositionFromCoordinates(x, y);
+                        auto move = GameBoard::CellSwapMove(newSelectedCell, lastSelectedCell);
                         if (game.getGameBoard().areCellsAdjacent(move.from, move.to)) {
-                            lastMouseDownX = -1;
-                            lastMouseDownY = -1;
+                            lastSelectedCell = noSelectedCell;
                             game.play(move, renderCallback);
                             
                         } else {
-                            lastMouseDownX = x;
-                            lastMouseDownY = y;
+                            lastSelectedCell = newSelectedCell;
                         }
                         renderGameBoard();
                     }
                 }
                 
-                if (e.type == SDL_MOUSEBUTTONUP && lastMouseDownX != -1) {
+                if (e.type == SDL_MOUSEBUTTONUP && !(lastSelectedCell == noSelectedCell)) {
                     isMouseDown = false;
                 }
                 
@@ -377,18 +382,91 @@ struct GameEngine {
                 if (e.type == SDL_MOUSEMOTION && isMouseDown && !game.gameOver()) {
                     int x, y;
                     SDL_GetMouseState(&x, &y);
-                    auto move = GameBoard::CellSwapMove(cellPositionFromCoordinates(x, y), cellPositionFromCoordinates(lastMouseDownX, lastMouseDownY));
+                    auto move = GameBoard::CellSwapMove(cellPositionFromCoordinates(x, y), lastSelectedCell);
                     if (game.getGameBoard().areCellsAdjacent(move.from, move.to)) {
-                        lastMouseDownX = -1;
-                        lastMouseDownY = -1;
+                        lastSelectedCell = noSelectedCell;
                         game.play(move, renderCallback);
                         renderGameBoard();
                     }
                 }
+                
+                
             }
             SDL_Delay(10);
         }
     }
+    
+    
+    void runBot() {
+        bool quit = false;
+        
+        
+        auto renderCallback = [&](CandyCrushGameBoardChange gameBoardChange) {
+            renderGameBoard(gameBoardChange);
+        };
+        
+        bool hasShownGameOver = false;
+        SDL_Event e;
+        auto move = DeterministicBot().selectMove(game);
+        while( !quit ) {
+            if (game.gameOver()) {
+                if (!hasShownGameOver) {
+                    hasShownGameOver = true;
+                    renderGameOver();
+                    SDL_RenderPresent(renderer);
+                    SDL_Delay(2000);
+                }
+            } else if (isFirstGame) {
+                renderBackground();
+                renderText("Click to start", 360, 250, scoreLabelFont);
+                SDL_RenderPresent(renderer);
+            } else {
+                renderGameBoard();
+            }
+            
+            // Handle clicks
+            while( SDL_PollEvent( &e ) != 0 ) {
+                // Handle clicks
+                if (e.type == SDL_MOUSEBUTTONDOWN){
+                    
+                    if (isFirstGame || game.gameOver()) {
+                        isFirstGame = false;
+                        game = createGame();
+                        
+                        hasShownGameOver = false;
+                        // Intro animation - all cells falls from the top in a triangular fashion
+                        CandyCrushGameBoardChange triangularFallGameBoardChange(game);
+                        for (auto row = 0; row < game.getGameBoard().rows; row++) {
+                            for (auto column = 0; column < game.getGameBoard().columns; column++) {
+                                auto pair = triangularFallGameBoardChange.gameBoardChange[{row, column}];
+                                triangularFallGameBoardChange.gameBoardChange[{row, column}] = {{row-(int)game.getGameBoard().rows-(int)game.getGameBoard().columns+1+column, column}, pair.second};
+                            }
+                        }
+                        lastSelectedCell = noSelectedCell;
+                        nextSelectedCell = noSelectedCell;
+                        renderGameBoard(triangularFallGameBoardChange,3);
+                        move = DeterministicBot().selectMove(game);
+                        lastSelectedCell = move.from;
+                        nextSelectedCell = move.to;
+                        renderGameBoard();
+                    } else {
+                        lastSelectedCell = noSelectedCell;
+                        nextSelectedCell = noSelectedCell;
+                        renderGameBoard();
+                        game.play(move, renderCallback);
+                        move = DeterministicBot().selectMove(game);
+                        lastSelectedCell = move.from;
+                        nextSelectedCell = move.to;
+                        renderGameBoard();
+                        
+                    }
+                }
+            }
+        }
+        
+        
+    }
+    
 };
 
 
@@ -396,7 +474,13 @@ struct GameEngine {
 int main( int argc, char* args[] )
 {
     GameEngine gameEngine;
-    gameEngine.run();
+    bool runBot = true;
+    
+    if (runBot) {
+        gameEngine.runBot();
+    } else {
+        gameEngine.run();
+    }
     return 0;
 }
 

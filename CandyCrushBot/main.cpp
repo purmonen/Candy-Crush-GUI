@@ -14,183 +14,11 @@
 #include <sstream>
 #include <ctime>
 #include <unordered_map>
-
-std::vector<GameBoard::CellSwapMove> allSwapsForGame(const CandyCrush &game) {
-    std::vector<GameBoard::CellSwapMove> swaps;
-    
-    for (auto row = 0; row < game.getGameBoard().rows; row++) {
-        for (auto column = 0; column < game.getGameBoard().columns-1; column++) {
-            auto move = GameBoard::CellSwapMove(GameBoard::CellPosition(row, column), GameBoard::CellPosition(row, column+1));
-            swaps.push_back(move);
-        }
-    }
-    
-    for (auto row = 0; row < game.getGameBoard().rows-1; row++) {
-        for (auto column = 0; column < game.getGameBoard().columns; column++) {
-            auto move = GameBoard::CellSwapMove(GameBoard::CellPosition(row, column), GameBoard::CellPosition(row+1, column));
-            swaps.push_back(move);
-        }
-    }
-    
-    return swaps;
-}
-
-size_t numberForCellSwapMove(const GameBoard::CellSwapMove &move, const CandyCrush &game) {
-    auto swaps = allSwapsForGame(game);
-    
-    for (int i = 0; i < swaps.size(); i++) {
-        if (swaps[i] == move) {
-            return i;
-        }
-    }
-    throw std::string("BAD MOVE!!!");
-}
-
-GameBoard::CellSwapMove cellSwapMoveForNumber(size_t number, const CandyCrush &game) {
-    return allSwapsForGame(game)[number];
-}
-
-std::string gameToLine(const CandyCrush &game) {
-    std::stringstream string;
-    
-    auto& gameBoard = game.getGameBoard();
-    for (auto row = 0; row  < gameBoard.rows; row++) {
-        for (auto column = 0; column  < gameBoard.columns; column++) {
-            string << gameBoard[row][column] << " ";
-        }
-    }
-    return string.str();
-}
-
-std::string moveToLine(size_t moveNumber, const CandyCrush &game) {
-    std::stringstream string;
-    string << moveNumber;
-    //    auto moveNumberMax = (game.getGameBoard().rows * (game.getGameBoard().rows-1) * 2);
-    //    for (auto i = 0; i < moveNumberMax; i++) {
-    //        string << (i == moveNumber ? 1 : 0) << " ";
-    //    }
-    return string.str();
-}
+#include "bots.hpp"
 
 
-std::string exec(const char* cmd) {
-    char buffer[128];
-    std::string result = "";
-    std::shared_ptr<FILE> pipe(popen(cmd, "r"), pclose);
-    if (!pipe) throw std::runtime_error("popen() failed!");
-    while (!feof(pipe.get())) {
-        if (fgets(buffer, 128, pipe.get()) != NULL)
-            result += buffer;
-    }
-    return result;
-}
-
-class RandomBot {
-public:
-    GameBoard::CellSwapMove selectMove(CandyCrush game) {
-        return game.legalMoves()[arc4random() % game.legalMoves().size()];
-    }
-};
-
-class DeterministicBot {
-public:
-    GameBoard::CellSwapMove selectMove(CandyCrush game) {
-        auto legalMoves = game.legalMoves();
-        int maxRow = 0;
-        int maxColumn = 0;
-        GameBoard::CellSwapMove maxMove = legalMoves[0];
-        
-        for (auto move: legalMoves) {
-            int row = std::max(move.from.row, move.to.row);
-            int column = std::max(move.from.column, move.to.column);
-            if (row > maxRow || (row == maxRow && column >= maxColumn)) {
-                maxRow = row;
-                maxColumn = column;
-                maxMove = move;
-            }
-        }
-        return maxMove;
-    }
-};
 
 
-class WolframBot {
-public:
-    GameBoard::CellSwapMove selectMove(CandyCrush game) {
-        std::string command = "/Applications/Mathematica.app/Contents/MacOS/WolframKernel -script /Users/samipurmonen/Desktop/ai-bot/predict2.m  '" + gameToLine(game) + "'";
-        
-        std::cout << command << std::endl;
-        //command = "echo $USER";
-        auto python_output = exec(command.c_str());
-        std::cout << python_output;
-
-
-        std::vector<int> moveProbabilities(allSwapsForGame(game).size());
-        size_t move = 0;
-        int probability = 0;
-        std::istringstream s2(python_output);
-        while (s2 >> move) {
-            s2 >> probability;
-            moveProbabilities[move] = probability;
-        }
-        
-        std::vector<int> sortedMoves(moveProbabilities.size());
-        for (auto i = 0; i < sortedMoves.size(); i++) {
-            sortedMoves[i] = i;
-        }
-        
-        std::sort(sortedMoves.begin(), sortedMoves.end(), [&](auto x, auto y){
-            return moveProbabilities[x] > moveProbabilities[y];
-        });
-        
-        for (auto i = 0; i < sortedMoves.size(); i++) {
-            auto move = sortedMoves[i];
-            std::cout << i << ". Move " << move << " " << moveProbabilities[move] << " " << game.isLegalMove(cellSwapMoveForNumber(move, game)) << std::endl;
-        }
-        
-        for (int i = 0; i < sortedMoves.size(); i++) {
-            auto move = sortedMoves[i];
-            if (game.isLegalMove(cellSwapMoveForNumber(move, game))) {
-                std::cout << "Move found on index " << i << std::endl;
-                return cellSwapMoveForNumber(move, game);
-            }
-        }
-        throw "Error: move not found but there must be one!";
-        
-    }
-    
-    const std::string name = "WolframBot";
-};
-
-
-class TensorFlowBot {
-public:
-    GameBoard::CellSwapMove selectMove(CandyCrush game) {
-        return cellSwapMoveForNumber(0, game);
-        std::string command = "/Users/samipurmonen/Desktop/ai-bot/ai_venv/bin/python3 /Users/samipurmonen/Desktop/ai-bot/candy_bot.py predict  '" + gameToLine(game) + "' -hidden_layers 3";
-        auto python_output = exec(command.c_str());
-        double maxProbability = 0.0;
-        size_t maxMove = 0;
-        size_t move = 0;
-        int probability = 0;
-        
-        std::istringstream s2(python_output);
-        std::vector<int> v;
-        while (s2 >> probability) {
-            //std::cout << probability << std::endl;
-            if (probability > maxProbability) {
-                maxProbability = probability;
-                maxMove = move;
-                
-            }
-            move++;
-        }
-        
-        return cellSwapMoveForNumber(maxMove, game);
-    }
-    
-    const std::string name = "TensorFlowBot";
-};
 
 
 CandyCrush createGame() {
@@ -244,14 +72,12 @@ int main(int argc, const char * argv[]) {
         }
         
         for (auto i = 0; i < numberOfMoves; i++) {
-            CandyCrush game = createGame();
             if (game.gameOver()) {
+                game = createGame();
                 continue;
             }
             auto move = DeterministicBot().selectMove(game);
-            
             auto moveNumber = numberForCellSwapMove(move, game);
-            
             
             assert(moveNumber < moveNumberMax);
             assert(moveNumber >= 0);

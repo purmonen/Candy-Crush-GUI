@@ -1,7 +1,7 @@
 #include "CandyCrush.hpp"
 
 CandyCrush::Cell CandyCrush::randomCell() {
-    return cells[arc4random() % numberOfCandies];
+    return cells[rand() % numberOfCandies];
 }
 
 // When randomly generating new cells some of them will create matches that must be cleared after each move and when initializing the game
@@ -185,13 +185,16 @@ bool CandyCrush::play(GameBoard::CellSwapMove move, GameBoardChangeCallback call
     if (!gameOver()) {
         auto isMoveValid = performMove(move, callback);
         clearAllMatches(callback);
+        if (isMoveValid) {
+            numberOfMovesLeft--;
+        }
         return isMoveValid;
     }
     return false;
 }
 
 bool CandyCrush::gameOver() const {
-    
+    return legalMoves().empty() || numberOfMovesLeft < 1;
     // Legal moves can theoretically be empty since new cells are completely randomly generated
     return numberOfSecondsLeft() <= 0 || legalMoves().empty();
 }

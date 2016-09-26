@@ -52,6 +52,7 @@ public:
     bool operator==(const CandyCrush & game) const;
     int getScore() const;
     int numberOfSecondsLeft() const;
+    int numberOfMovesLeft = 20;
     bool play(GameBoard::CellSwapMove move, GameBoardChangeCallback callback = nullptr);
     bool gameOver() const;
     std::vector<GameBoard::CellSwapMove> legalMoves() const;

@@ -42,6 +42,7 @@
 /* Begin PBXFileReference section */
 		2619C6681D3E731500D0B721 /* README */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README; sourceTree = "<group>"; };
 		2619C6691D3E74A200D0B721 /* assets */ = {isa = PBXFileReference; lastKnownFileType = folder; path = assets; sourceTree = "<group>"; };
+		2678E3EF1D98597600F5651F /* bots.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = bots.hpp; sourceTree = "<group>"; };
 		267ACDC91D3D23FB00E758FD /* King-Test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "King-Test"; sourceTree = BUILT_PRODUCTS_DIR; };
 		267ACDD31D3D242F00E758FD /* CandyCrush.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CandyCrush.cpp; sourceTree = "<group>"; };
 		267ACDD41D3D242F00E758FD /* CandyCrush.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = CandyCrush.hpp; sourceTree = "<group>"; };
@@ -113,6 +114,7 @@
 			isa = PBXGroup;
 			children = (
 				E3F68FD91D88B69D00E98183 /* main.cpp */,
+				2678E3EF1D98597600F5651F /* bots.hpp */,
 			);
 			path = CandyCrushBot;
 			sourceTree = "<group>";
@@ -160,7 +162,7 @@
 		267ACDC11D3D23FB00E758FD /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0730;
+				LastUpgradeCheck = 0800;
 				ORGANIZATIONNAME = "Sami Purmonen";
 				TargetAttributes = {
 					267ACDC81D3D23FB00E758FD = {
@@ -225,8 +227,10 @@
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "-";
@@ -269,8 +273,10 @@
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "-";
@@ -358,6 +364,7 @@
 				E3F68FDD1D88B69D00E98183 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
