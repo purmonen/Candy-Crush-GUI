@@ -397,6 +397,10 @@ struct GameEngine {
     }
     
     
+    GameBoard::CellSwapMove moveForGame(const CandyCrush &game) {
+        return TensorFlowBot().selectMove(game);
+    }
+    
     void runBot() {
         bool quit = false;
         
@@ -445,7 +449,7 @@ struct GameEngine {
                         lastSelectedCell = noSelectedCell;
                         nextSelectedCell = noSelectedCell;
                         renderGameBoard(triangularFallGameBoardChange,3);
-                        move = DeterministicBot().selectMove(game);
+                        move = moveForGame(game);
                         lastSelectedCell = move.from;
                         nextSelectedCell = move.to;
                         renderGameBoard();
@@ -454,7 +458,7 @@ struct GameEngine {
                         nextSelectedCell = noSelectedCell;
                         renderGameBoard();
                         game.play(move, renderCallback);
-                        move = DeterministicBot().selectMove(game);
+                        move = moveForGame(game);
                         lastSelectedCell = move.from;
                         nextSelectedCell = move.to;
                         renderGameBoard();

@@ -162,28 +162,47 @@ public:
 class TensorFlowBot {
 public:
     GameBoard::CellSwapMove selectMove(CandyCrush game) {
-        return cellSwapMoveForNumber(0, game);
-        std::string command = "/Users/samipurmonen/Desktop/ai-bot/ai_venv/bin/python3 /Users/samipurmonen/Desktop/ai-bot/candy_bot.py predict  '" + gameToLine(game) + "' -hidden_layers 3";
+        std::string command = "/Library/Frameworks/Python.framework/Versions/3.4/bin/python3 /Users/Sami/Desktop/ai-bot/cnn.py predict  '" + gameToLine(game) + "'";
+        
+        std::cout << command << std::endl;
         auto python_output = exec(command.c_str());
-        double maxProbability = 0.0;
-        size_t maxMove = 0;
+        std::cout << python_output;
+        
+        
+        std::vector<int> moveProbabilities(allSwapsForGame(game).size());
         size_t move = 0;
         int probability = 0;
-        
         std::istringstream s2(python_output);
-        std::vector<int> v;
-        while (s2 >> probability) {
-            //std::cout << probability << std::endl;
-            if (probability > maxProbability) {
-                maxProbability = probability;
-                maxMove = move;
-                
-            }
-            move++;
+        while (s2 >> move) {
+            s2 >> probability;
+            moveProbabilities[move] = probability;
         }
         
-        return cellSwapMoveForNumber(maxMove, game);
+        std::vector<int> sortedMoves(moveProbabilities.size());
+        for (auto i = 0; i < sortedMoves.size(); i++) {
+            sortedMoves[i] = i;
+        }
+        
+        std::sort(sortedMoves.begin(), sortedMoves.end(), [&](auto x, auto y){
+            return moveProbabilities[x] > moveProbabilities[y];
+        });
+        
+        for (auto i = 0; i < sortedMoves.size(); i++) {
+            auto move = sortedMoves[i];
+            std::cout << i << ". Move " << move << " " << moveProbabilities[move] << " " << game.isLegalMove(cellSwapMoveForNumber(move, game)) << std::endl;
+        }
+        
+        for (int i = 0; i < sortedMoves.size(); i++) {
+            auto move = sortedMoves[i];
+            if (game.isLegalMove(cellSwapMoveForNumber(move, game))) {
+                std::cout << "Move found on index " << i << std::endl;
+                return cellSwapMoveForNumber(move, game);
+            }
+        }
+        throw "Error: move not found but there must be one!";
+        
     }
+
     
     const std::string name = "TensorFlowBot";
 };

@@ -4,6 +4,11 @@
 <dict>
 	<key>SchemeUserState</key>
 	<dict>
+		<key>CandyCrushBot.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>1</integer>
+		</dict>
 		<key>King-Test.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
@@ -13,6 +18,11 @@
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
 		<key>267ACDC81D3D23FB00E758FD</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>E3F68FD61D88B69D00E98183</key>
 		<dict>
 			<key>primary</key>
 			<true/>

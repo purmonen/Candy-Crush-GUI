@@ -18,9 +18,6 @@
 
 
 
-
-
-
 CandyCrush createGame() {
     return CandyCrush(8, 8, 60, 5);
 }
@@ -150,7 +147,7 @@ int main(int argc, const char * argv[]) {
         
         auto moveForBot = [&](std::string botName, const CandyCrush &game) { return botName == tensorFlowBot.name ? tensorFlowBot.selectMove(game) : wolframBot.selectMove(game); };
         
-        std::vector<std::string> bots = {wolframBot.name};
+        std::vector<std::string> bots = {tensorFlowBot.name};
         auto i = 0;
         while (!game.gameOver()) {
             game = createGame();
