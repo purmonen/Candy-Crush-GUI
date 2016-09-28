@@ -51,7 +51,7 @@ int main(int argc, const char * argv[]) {
     }
     
     CandyCrush game = createGame();
-//    generateData = true;
+    generateData = true;
     
     
     
@@ -60,6 +60,7 @@ int main(int argc, const char * argv[]) {
     if (generateData) {
         
         std::cout << allSwapsForGame(game).size() << std::endl;
+        std::cout << game.cells.size() + 1 << std::endl;
         
         auto moveNumberMax = (game.getGameBoard().rows * (game.getGameBoard().rows-1) * 2);
         
@@ -86,7 +87,7 @@ int main(int argc, const char * argv[]) {
                 gameMoveMap[gameString] = moveString;
                 moveCounts[moveNumber]++;
                 std::cout << gameString;
-                std::cout << std::endl;
+                std::cout << legalMovesToLine(game);
                 std::cout << moveString;
                 std::cout << std::endl;
             } else {

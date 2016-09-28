@@ -50,11 +50,38 @@ std::string gameToLine(const CandyCrush &game) {
     std::stringstream string;
     
     auto& gameBoard = game.getGameBoard();
-    for (auto row = 0; row  < gameBoard.rows; row++) {
-        for (auto column = 0; column  < gameBoard.columns; column++) {
-            string << gameBoard[row][column] << " ";
+    for (auto cell: game.cells) {
+        for (auto row = 0; row  < gameBoard.rows; row++) {
+            for (auto column = 0; column  < gameBoard.columns; column++) {
+                string << (gameBoard[row][column] == cell ? 1 : 0) << " ";
+            }
         }
+        
+        string << std::endl;
     }
+    return string.str();
+}
+
+std::string legalMovesToLine(const CandyCrush &game) {
+    std::stringstream string;
+    
+    
+    auto& gameBoard = game.getGameBoard();
+    auto legalMoves = game.legalMoves();
+        for (auto row = 0; row  < gameBoard.rows; row++) {
+            for (auto column = 0; column  < gameBoard.columns; column++) {
+                bool isLegalMove = false;
+                auto cellPosition = GameBoard::CellPosition(row, column);
+                for (auto move: legalMoves) {
+                    if (move.from == cellPosition || move.to == cellPosition) {
+                        isLegalMove = true;
+                        break;
+                    }
+                }
+                string << (isLegalMove ? 1 : 0) << " ";
+            }
+        }
+    string << std::endl;
     return string.str();
 }
 
