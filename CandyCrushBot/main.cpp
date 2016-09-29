@@ -51,7 +51,7 @@ int main(int argc, const char * argv[]) {
     }
     
     CandyCrush game = createGame();
-    generateData = true;
+    generateData = false;
     
     
     
@@ -87,7 +87,7 @@ int main(int argc, const char * argv[]) {
                 gameMoveMap[gameString] = moveString;
                 moveCounts[moveNumber]++;
                 std::cout << gameString;
-                std::cout << legalMovesToLine(game);
+//                std::cout << std::endl;
                 std::cout << moveString;
                 std::cout << std::endl;
             } else {
@@ -178,6 +178,7 @@ int main(int argc, const char * argv[]) {
                 if (move == predicted_move) {
                     botRuns[bot].correctMoves++;
                 }
+                
                 
                 std::cout << "Predicted move: " << numberForCellSwapMove(predicted_move, game) << std::endl;
                 

@@ -39,6 +39,7 @@ size_t numberForCellSwapMove(const GameBoard::CellSwapMove &move, const CandyCru
             return i;
         }
     }
+    return 0;
     throw std::string("BAD MOVE!!!");
 }
 
@@ -46,7 +47,30 @@ GameBoard::CellSwapMove cellSwapMoveForNumber(size_t number, const CandyCrush &g
     return allSwapsForGame(game)[number];
 }
 
-std::string gameToLine(const CandyCrush &game) {
+std::string legalMovesToLine(const CandyCrush &game) {
+    std::stringstream string;
+    
+    
+    auto& gameBoard = game.getGameBoard();
+    auto legalMoves = game.legalMoves();
+    for (auto row = 0; row  < gameBoard.rows; row++) {
+        for (auto column = 0; column  < gameBoard.columns; column++) {
+            bool isLegalMove = false;
+            auto cellPosition = GameBoard::CellPosition(row, column);
+            for (auto move: legalMoves) {
+                if (move.from == cellPosition || move.to == cellPosition) {
+                    isLegalMove = true;
+                    break;
+                }
+            }
+            string << (isLegalMove ? 1 : 0) << " ";
+        }
+    }
+    string << std::endl;
+    return string.str();
+}
+
+std::string gameToLine2(const CandyCrush &game) {
     std::stringstream string;
     
     auto& gameBoard = game.getGameBoard();
@@ -59,31 +83,27 @@ std::string gameToLine(const CandyCrush &game) {
         
         string << std::endl;
     }
+    string << legalMovesToLine(game);
+    
     return string.str();
 }
 
-std::string legalMovesToLine(const CandyCrush &game) {
+std::string gameToLine(const CandyCrush &game) {
     std::stringstream string;
     
-    
     auto& gameBoard = game.getGameBoard();
-    auto legalMoves = game.legalMoves();
         for (auto row = 0; row  < gameBoard.rows; row++) {
             for (auto column = 0; column  < gameBoard.columns; column++) {
-                bool isLegalMove = false;
-                auto cellPosition = GameBoard::CellPosition(row, column);
-                for (auto move: legalMoves) {
-                    if (move.from == cellPosition || move.to == cellPosition) {
-                        isLegalMove = true;
-                        break;
-                    }
-                }
-                string << (isLegalMove ? 1 : 0) << " ";
+                string << gameBoard[row][column] << " ";
             }
         }
     string << std::endl;
+    string << legalMovesToLine(game);
+    
     return string.str();
 }
+
+
 
 std::string moveToLine(size_t moveNumber, const CandyCrush &game) {
     std::stringstream string;
@@ -189,7 +209,7 @@ public:
 class TensorFlowBot {
 public:
     GameBoard::CellSwapMove selectMove(CandyCrush game) {
-        std::string command = "/Library/Frameworks/Python.framework/Versions/3.4/bin/python3 /Users/Sami/Desktop/ai-bot/cnn.py predict  '" + gameToLine(game) + "'";
+        std::string command = "/usr/local/bin/python3 /Users/samipurmonen/Desktop/new-ai-bot/cnn.py -action predict -graph_file /Users/samipurmonen/Desktop/new-ai-bot/fdsa2.ckpt -data  '" + gameToLine(game) + "'";
         
         std::cout << command << std::endl;
         auto python_output = exec(command.c_str());
@@ -225,6 +245,7 @@ public:
                 std::cout << "Move found on index " << i << std::endl;
                 return cellSwapMoveForNumber(move, game);
             }
+            return GameBoard::CellSwapMove(GameBoard::CellPosition(-1, -1), GameBoard::CellPosition(-1, -1));
         }
         throw "Error: move not found but there must be one!";
         
