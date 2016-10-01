@@ -478,7 +478,7 @@ struct GameEngine {
 int main( int argc, char* args[] )
 {
     GameEngine gameEngine;
-    bool runBot = true;
+    bool runBot = false;
     
     if (runBot) {
         gameEngine.runBot();

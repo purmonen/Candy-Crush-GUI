@@ -15,7 +15,7 @@
 #include <ctime>
 #include <unordered_map>
 #include "bots.hpp"
-
+#include <chrono>
 
 
 CandyCrush createGame() {
@@ -51,7 +51,7 @@ int main(int argc, const char * argv[]) {
     }
     
     CandyCrush game = createGame();
-    generateData = false;
+    generateData = true;
     
     
     
@@ -70,11 +70,18 @@ int main(int argc, const char * argv[]) {
         }
         
         for (auto i = 0; i < numberOfMoves; i++) {
+            
+            
+//            std::chrono::high_resolution_clock::time_point t1;
+//            t1 = std::chrono::high_resolution_clock::now();
             if (game.gameOver()) {
                 game = createGame();
                 continue;
             }
+//            std::cout << "Creating game " << std::chrono::duration_cast<std::chrono::microseconds>( std::chrono::high_resolution_clock::now() - t1 ).count() << std::endl;
+            
             auto move = DeterministicBot().selectMove(game);
+            
             auto moveNumber = numberForCellSwapMove(move, game);
             
             assert(moveNumber < moveNumberMax);

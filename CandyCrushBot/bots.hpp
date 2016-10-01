@@ -11,6 +11,9 @@
 #include <unordered_map>
 #include <iostream>
 
+
+
+
 std::vector<GameBoard::CellSwapMove> allSwapsForGame(const CandyCrush &game) {
     std::vector<GameBoard::CellSwapMove> swaps;
     
@@ -83,6 +86,8 @@ std::string gameToLine2(const CandyCrush &game) {
         
         string << std::endl;
     }
+    
+    
     string << legalMovesToLine(game);
     
     return string.str();
@@ -245,7 +250,7 @@ public:
                 std::cout << "Move found on index " << i << std::endl;
                 return cellSwapMoveForNumber(move, game);
             }
-            return GameBoard::CellSwapMove(GameBoard::CellPosition(-1, -1), GameBoard::CellPosition(-1, -1));
+            //return GameBoard::CellSwapMove(GameBoard::CellPosition(-1, -1), GameBoard::CellPosition(-1, -1));
         }
         throw "Error: move not found but there must be one!";
         

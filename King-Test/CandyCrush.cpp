@@ -1,4 +1,5 @@
 #include "CandyCrush.hpp"
+#include "assert.h"
 
 CandyCrush::Cell CandyCrush::randomCell() {
     return cells[rand() % numberOfCandies];
@@ -12,7 +13,47 @@ void CandyCrush::clearAllMatches(GameBoardChangeCallback callback) {
     while (performMove(doNothingMove, callback)) {}
 }
 
+bool CandyCrush::isLegalMoveFast(GameBoard::CellSwapMove move) const {
+    if (!gameBoard.isCellValid(move.from) || !gameBoard.isCellValid(move.to)) {
+        return false;
+    }
+    
+    auto gameBoard = this->gameBoard;
+    gameBoard.swapCells(move);
+
+    
+    for (auto fromPosition: {move.from, move.to}) {
+        //auto toPosition = fromPosition == move.from ? move.to : move.from;
+        for (auto direction: {GameBoard::Direction::Up, GameBoard::Direction::Right, GameBoard::Direction::Down, GameBoard::Direction::Left}) {
+            auto firstNeighborCell = fromPosition.cellAtDirection(direction);
+            auto secondNeighborCell = firstNeighborCell.cellAtDirection(direction);
+            
+            
+            if (gameBoard.isCellValid(firstNeighborCell) && gameBoard.isCellValid(secondNeighborCell)) {
+                if (gameBoard[fromPosition] == gameBoard[firstNeighborCell] && gameBoard[firstNeighborCell] == gameBoard[secondNeighborCell]) {
+                    return true;
+                }
+            }
+        }
+        auto upCell = fromPosition.cellAtDirection(GameBoard::Up);
+        auto downCell = fromPosition.cellAtDirection(GameBoard::Down);
+        auto leftCell = fromPosition.cellAtDirection(GameBoard::Left);
+        auto rightCell = fromPosition.cellAtDirection(GameBoard::Right);
+        
+        if (gameBoard.isCellValid(upCell) && gameBoard.isCellValid(downCell) && gameBoard[upCell] == gameBoard[fromPosition] && gameBoard[upCell] == gameBoard[downCell]) {
+            return true;
+        }
+        if (gameBoard.isCellValid(leftCell) && gameBoard.isCellValid(rightCell) && gameBoard[leftCell] == gameBoard[fromPosition] && gameBoard[leftCell] == gameBoard[rightCell]) {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool CandyCrush::isLegalMove(GameBoard::CellSwapMove move) const {
+
+    
+    
     // Perform the move on a copy of the game and returns whether it was valid or not
     auto game = *this;
     return game.performMove(move);
@@ -211,7 +252,10 @@ std::vector<GameBoard::CellSwapMove> CandyCrush::legalMoves() const {
         for (auto column = 0; column < gameBoard.columns; column++) {
             GameBoard::CellPosition cell(row, column);
             for (auto adjacentCell: gameBoard.adjacentCells(cell)) {
-                if (isLegalMove(GameBoard::CellSwapMove(cell, adjacentCell))) {
+
+                
+//                assert(isLegalMove(GameBoard::CellSwapMove(cell, adjacentCell)) == isLegalMoveFast(GameBoard::CellSwapMove(cell, adjacentCell)));
+                if (isLegalMoveFast(GameBoard::CellSwapMove(cell, adjacentCell))) {
                     moves.push_back(GameBoard::CellSwapMove(cell, adjacentCell));
                 }
             }
@@ -227,8 +271,8 @@ std::ostream& operator<<(std::ostream& os, const CandyCrush& game) {
         {CandyCrush::Green, "G"},
         {CandyCrush::Blue, "B"},
         {CandyCrush::Purple, "P"},
-//        {CandyCrush::Yellow, "Y"},
-//        {CandyCrush::Red, "R"},
+        //        {CandyCrush::Yellow, "Y"},
+        //        {CandyCrush::Red, "R"},
         //{CandyCrush::Purple, "!"}
     };
     

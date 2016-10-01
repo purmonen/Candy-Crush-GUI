@@ -49,6 +49,7 @@ public:
     const CandyCrushGameBoard& getGameBoard() const;
     CandyCrush gameForMove(GameBoard::CellSwapMove) const;
     bool isLegalMove(GameBoard::CellSwapMove move) const;
+    bool isLegalMoveFast(GameBoard::CellSwapMove move) const;
     bool operator==(const CandyCrush & game) const;
     int getScore() const;
     int numberOfSecondsLeft() const;
