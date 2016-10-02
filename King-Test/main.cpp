@@ -398,7 +398,7 @@ struct GameEngine {
     
     
     GameBoard::CellSwapMove moveForGame(const CandyCrush &game) {
-        return TensorFlowBot().selectMove(game);
+        return GreedyBot().selectMove(game);
     }
     
     void runBot() {
@@ -411,7 +411,7 @@ struct GameEngine {
         
         bool hasShownGameOver = false;
         SDL_Event e;
-        auto move = DeterministicBot().selectMove(game);
+        auto move = GreedyBot().selectMove(game);
         while( !quit ) {
             if (game.gameOver()) {
                 if (!hasShownGameOver) {
@@ -478,7 +478,7 @@ struct GameEngine {
 int main( int argc, char* args[] )
 {
     GameEngine gameEngine;
-    bool runBot = false;
+    bool runBot = true;
     
     if (runBot) {
         gameEngine.runBot();

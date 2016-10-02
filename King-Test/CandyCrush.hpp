@@ -6,6 +6,7 @@
 #include <unordered_set>
 #include <vector>
 #include "GameBoard.hpp"
+
 #include <chrono>
 
 struct CandyCrushGameBoardChange;
@@ -48,6 +49,8 @@ public:
     CandyCrush();
     const CandyCrushGameBoard& getGameBoard() const;
     CandyCrush gameForMove(GameBoard::CellSwapMove) const;
+    int numberOfMatchesForMove(GameBoard::CellSwapMove) const;
+    
     bool isLegalMove(GameBoard::CellSwapMove move) const;
     bool isLegalMoveFast(GameBoard::CellSwapMove move) const;
     bool operator==(const CandyCrush & game) const;

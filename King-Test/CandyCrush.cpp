@@ -13,6 +13,62 @@ void CandyCrush::clearAllMatches(GameBoardChangeCallback callback) {
     while (performMove(doNothingMove, callback)) {}
 }
 
+int CandyCrush::numberOfMatchesForMove(GameBoard::CellSwapMove move) const {
+    auto gameBoard = this->gameBoard;
+    gameBoard.swapCells(move);
+    
+    auto totalMatches = 0;
+    
+    auto minimumRequiredNumberOfMatches = 3;
+    
+    for (auto cellPosition: {move.from, move.to}) {
+        auto horizontalMatches = 0;
+        auto verticalMatches = 0;
+        
+        for (int row = cellPosition.row-1; row >= 0; row--) {
+            if (gameBoard[row][cellPosition.column] == gameBoard[cellPosition]) {
+                verticalMatches++;
+            } else {
+                break;
+            }
+        }
+        for (int row = cellPosition.row+1; row < gameBoard.rows; row++) {
+            if (gameBoard[row][cellPosition.column] == gameBoard[cellPosition]) {
+                verticalMatches++;
+            } else {
+                break;
+            }
+        }
+        
+        for (int column = cellPosition.column-1; column >= 0; column--) {
+            if (gameBoard[cellPosition.row][column] == gameBoard[cellPosition]) {
+                horizontalMatches++;
+            } else {
+                break;
+            }
+        }
+        for (int column = cellPosition.column+1; column < gameBoard.columns; column++) {
+            if (gameBoard[cellPosition.row][column] == gameBoard[cellPosition]) {
+                horizontalMatches++;
+            } else {
+                break;
+            }
+        }
+        
+        int matches = 1;
+        if (horizontalMatches >= minimumRequiredNumberOfMatches - 1) {
+            matches += horizontalMatches;
+        }
+        if (verticalMatches >= minimumRequiredNumberOfMatches - 1) {
+            matches +=  verticalMatches;
+        }
+        if (matches >= minimumRequiredNumberOfMatches) {
+            totalMatches += matches;
+        }
+    }
+    return totalMatches;
+}
+
 bool CandyCrush::isLegalMoveFast(GameBoard::CellSwapMove move) const {
     if (!gameBoard.isCellValid(move.from) || !gameBoard.isCellValid(move.to)) {
         return false;
@@ -20,7 +76,7 @@ bool CandyCrush::isLegalMoveFast(GameBoard::CellSwapMove move) const {
     
     auto gameBoard = this->gameBoard;
     gameBoard.swapCells(move);
-
+    
     
     for (auto fromPosition: {move.from, move.to}) {
         //auto toPosition = fromPosition == move.from ? move.to : move.from;
@@ -51,7 +107,7 @@ bool CandyCrush::isLegalMoveFast(GameBoard::CellSwapMove move) const {
 }
 
 bool CandyCrush::isLegalMove(GameBoard::CellSwapMove move) const {
-
+    
     
     
     // Perform the move on a copy of the game and returns whether it was valid or not
@@ -252,9 +308,9 @@ std::vector<GameBoard::CellSwapMove> CandyCrush::legalMoves() const {
         for (auto column = 0; column < gameBoard.columns; column++) {
             GameBoard::CellPosition cell(row, column);
             for (auto adjacentCell: gameBoard.adjacentCells(cell)) {
-
                 
-//                assert(isLegalMove(GameBoard::CellSwapMove(cell, adjacentCell)) == isLegalMoveFast(GameBoard::CellSwapMove(cell, adjacentCell)));
+                
+                //                assert(isLegalMove(GameBoard::CellSwapMove(cell, adjacentCell)) == isLegalMoveFast(GameBoard::CellSwapMove(cell, adjacentCell)));
                 if (isLegalMoveFast(GameBoard::CellSwapMove(cell, adjacentCell))) {
                     moves.push_back(GameBoard::CellSwapMove(cell, adjacentCell));
                 }

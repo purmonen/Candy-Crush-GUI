@@ -5,6 +5,7 @@
 #include <vector>
 #include <assert.h>
 #include "GameBoard.hpp"
+#include "CandyCrush.hpp"
 #include <vector>
 #include <sstream>
 #include <ctime>
@@ -52,10 +53,27 @@ GameBoard::CellSwapMove cellSwapMoveForNumber(size_t number, const CandyCrush &g
 
 std::string legalMovesToLine(const CandyCrush &game) {
     std::stringstream string;
+    const auto& gameBoard = game.getGameBoard();
+    const auto legalMoves = game.legalMoves();
     
+    bool legalCellPositions[gameBoard.rows][gameBoard.columns];
+    for (auto row = 0; row < gameBoard.rows; row++) {
+        for (auto column = 0; column < gameBoard.columns; column++) {
+            legalCellPositions[row][column] = false;
+        }
+    }
+    for (auto move: legalMoves) {
+        legalCellPositions[move.from.row][move.from.column] = true;
+        legalCellPositions[move.to.row][move.to.column] = true;
+    }
     
-    auto& gameBoard = game.getGameBoard();
-    auto legalMoves = game.legalMoves();
+    for (auto row = 0; row  < gameBoard.rows; row++) {
+        for (auto column = 0; column  < gameBoard.columns; column++) {
+            string << (legalCellPositions[row][column] ? 1 : 0) << " ";
+        }
+    }
+    
+    /*
     for (auto row = 0; row  < gameBoard.rows; row++) {
         for (auto column = 0; column  < gameBoard.columns; column++) {
             bool isLegalMove = false;
@@ -69,6 +87,7 @@ std::string legalMovesToLine(const CandyCrush &game) {
             string << (isLegalMove ? 1 : 0) << " ";
         }
     }
+     */
     string << std::endl;
     return string.str();
 }
@@ -157,6 +176,31 @@ public:
                 maxMove = move;
             }
         }
+        return maxMove;
+    }
+};
+
+
+//std::ostream& operator<<(std::ostream &os, GameBoard::CellPosition) {
+//    return os;
+//}
+
+class GreedyBot {
+public:
+    GameBoard::CellSwapMove selectMove(CandyCrush game) {
+        auto legalMoves = game.legalMoves();
+        int maxNumberOfMatches = 0;
+        GameBoard::CellSwapMove maxMove = legalMoves[0];
+        for (auto move: legalMoves) {
+            auto numberOfMatches = game.numberOfMatchesForMove(move);
+            
+            if (numberOfMatches > maxNumberOfMatches) {
+                maxMove = move;
+                maxNumberOfMatches = numberOfMatches;
+            }
+        }
+        
+        std::cout << "numberOfMatches " << maxNumberOfMatches << " " << maxMove.from.row << "," <<  maxMove.from.column << " -> " << maxMove.to.row << "," <<  maxMove.to.column << std::endl;
         return maxMove;
     }
 };
